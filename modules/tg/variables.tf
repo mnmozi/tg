@@ -98,11 +98,20 @@ variable "stickiness_enabled" {
   default     = false
 }
 
-variable "stickiness_type" {
-  description = "Stickiness type. Valid value: lb_cookie."
-  type        = string
-  default     = "lb_cookie"
+variable "stickiness" {
+  type = object({
+    enabled         = bool
+    cookie_duration = optional(string, "3600")      # Default value of 3600 seconds
+    type            = optional(string, "lb_cookie") # Default to "lb_cookie"
+  })
+  default = {
+    enabled         = false
+    cookie_duration = "3600"
+    type            = "lb_cookie"
+  }
+  description = "Configuration for stickiness settings"
 }
+
 variable "target_type" {
   type    = string
   default = "ip"

@@ -3,7 +3,7 @@ locals {
   environment = var.environment
 
   # Naming variables
-  identifier = "${var.environment}-${var.required_tags.project}-${var.required_tags.component}"
+  identifier = (var.tg_name == null || var.tg_name == "") ? "${var.environment}-${var.required_tags.project}-${var.required_tags.component}" : var.tg_name
 
   # Merge required tags with additional tags
   tags = merge(
@@ -15,7 +15,7 @@ locals {
 }
 
 resource "aws_lb_target_group" "tg" {
-  name = (var.tg_name == null || var.tg_name == "") ? local.identifier : var.tg_name
+  name = local.identifier
 
   port        = var.target_port
   protocol    = var.protocol
@@ -30,10 +30,13 @@ resource "aws_lb_target_group" "tg" {
     matcher             = var.health_check_matcher
   }
 
-  stickiness {
-    cookie_duration = var.stickiness_cookie_duration
-    enabled         = var.stickiness_enabled
-    type            = var.stickiness_type
+  dynamic "stickiness" {
+    for_each = var.stickiness_enabled ? [1] : []
+    content {
+      cookie_duration = var.stickiness.cookie_duration
+      enabled         = true
+      type            = var.stickiness.type
+    }
   }
 
   tags = local.tags

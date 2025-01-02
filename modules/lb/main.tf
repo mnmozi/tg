@@ -3,7 +3,7 @@ locals {
   environment = var.environment
 
   # Naming variables
-  identifier = "${var.environment}-${var.required_tags.project}-${var.required_tags.component}"
+  identifier = (var.lb_name == null || var.lb_name == "") ? "${var.environment}-${var.required_tags.project}-${var.required_tags.component}" : var.lb_name
 
   # Merge required tags with additional tags
   tags = merge(
@@ -15,7 +15,7 @@ locals {
 }
 
 resource "aws_lb" "lb" {
-  name               = (var.lb_name == null || var.lb_name == "") ? local.identifier : var.lb_name
+  name               = local.identifier
   internal           = var.internal
   load_balancer_type = var.load_balancer_type
   security_groups    = var.security_group_ids
@@ -23,7 +23,11 @@ resource "aws_lb" "lb" {
 
   idle_timeout           = var.idle_timeout
   enable_xff_client_port = false
-
+  access_logs {
+    bucket  = var.access_logs.bucket
+    prefix  = var.access_logs.prefix
+    enabled = var.access_logs.enabled
+  }
   tags = local.tags
 }
 
@@ -44,6 +48,5 @@ resource "aws_lb_listener" "listeners" {
       status_code  = "403"
     }
   }
-
   tags = local.tags
 }

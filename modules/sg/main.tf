@@ -1,7 +1,7 @@
 locals {
   region      = var.region
   environment = var.environment
-  identifier  = "${var.environment}-${var.required_tags.project}-${var.required_tags.component}"
+  identifier  = var.sg_name == null || var.sg_name == "" ? "${var.environment}-${var.required_tags.project}-${var.required_tags.component}" : var.sg_name
   tags = merge(
     var.required_tags,
     var.tags,
@@ -25,7 +25,7 @@ data "aws_security_group" "egress_by_name" {
 
 resource "aws_security_group" "sg" {
   name        = local.identifier
-  description = "Security group for ${local.identifier}"
+  description = var.description == null || var.description == "" ? "Security group for ${local.identifier}" : var.description
   vpc_id      = var.vpc_id
 
   # Dynamic ingress rules
@@ -42,13 +42,14 @@ resource "aws_security_group" "sg" {
       }]
     )
     content {
-      cidr_blocks     = lookup(ingress.value, "cidr_blocks", null)
-      prefix_list_ids = lookup(ingress.value, "prefix_list_ids", null)
-      security_groups = lookup(ingress.value, "security_groups", null)
-      description     = ingress.value.description
-      from_port       = ingress.value.from_port
-      to_port         = ingress.value.to_port
-      protocol        = ingress.value.protocol
+      cidr_blocks      = lookup(ingress.value, "cidr_blocks", null)
+      ipv6_cidr_blocks = lookup(ingress.value, "ipv6_cidr_blocks", null)
+      prefix_list_ids  = lookup(ingress.value, "prefix_list_ids", null)
+      security_groups  = lookup(ingress.value, "security_groups", null)
+      description      = ingress.value.description
+      from_port        = ingress.value.from_port
+      to_port          = ingress.value.to_port
+      protocol         = ingress.value.protocol
     }
   }
 

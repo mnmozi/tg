@@ -13,7 +13,19 @@ variable "load_balancer_type" {
   type        = string
   default     = "application"
 }
-
+variable "access_logs" {
+  description = "Configuration for access logs"
+  type = object({
+    bucket  = string
+    prefix  = optional(string, "")
+    enabled = bool
+  })
+  default = {
+    bucket  = ""
+    prefix  = ""
+    enabled = false
+  }
+}
 variable "required_tags" {
   description = "Required tags that need to be applied to all resources"
   type = object({

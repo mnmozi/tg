@@ -17,6 +17,17 @@ variable "vpc_id" {
   description = "The ID of the VPC where the security group will be created"
   type        = string
 }
+variable "sg_name" {
+  description = "Name of the sg"
+  type        = string
+  default     = ""
+}
+
+variable "description" {
+  description = "description of the sg"
+  type        = string
+  default     = ""
+}
 
 variable "required_tags" {
   description = "Mandatory tags that must be applied to all resources"
@@ -35,12 +46,13 @@ variable "tags" {
 variable "ingress_rules" {
   description = "List of regular ingress rules"
   type = list(object({
-    cidr_blocks     = optional(list(string), []) # Optional field with default to an empty list
-    prefix_list_ids = optional(list(string), [])
-    description     = string
-    from_port       = number
-    to_port         = number
-    protocol        = string
+    cidr_blocks      = optional(list(string), []) # Optional field with default to an empty list
+    ipv6_cidr_blocks = optional(list(string), []) # Optional field with default to an empty list
+    prefix_list_ids  = optional(list(string), [])
+    description      = string
+    from_port        = number
+    to_port          = number
+    protocol         = string
   }))
   default = []
 }
