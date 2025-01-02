@@ -73,6 +73,12 @@ variable "subnet_id" {
   type        = string
 }
 
+variable "user_data" {
+  description = "script that will run when the machine starts"
+  type        = string
+  default     = ""
+}
+
 variable "metadata" {
   description = "Metadata options for the instance"
   type = object({
@@ -101,6 +107,7 @@ variable "ebs_block_device" {
   description = "Additional EBS block devices"
   type = list(object({
     device_name           = string
+    name                  = optional(string, "")
     delete_on_termination = bool
     encrypted             = bool
     iops                  = number

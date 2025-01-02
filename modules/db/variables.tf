@@ -50,6 +50,10 @@ variable "secret_name" {
   type        = string
   description = "The name of the secret in AWS Secrets Manager containing the database credentials."
 }
+variable "password" {
+  type        = string
+  description = "THIS IS NOT RECOMENDED, PLEASE CONSEDER CREATING SECRET AND PASS IT IN secret_name and  password_key."
+}
 
 variable "password_key" {
   type        = string
@@ -91,6 +95,12 @@ variable "parameter_group_name" {
 variable "allocated_storage" {
   type        = number
   default     = 15
+  description = "The allocated storage size in GB for the RDS instance."
+}
+
+variable "max_allocated_storage" {
+  type        = number
+  default     = 0
   description = "The allocated storage size in GB for the RDS instance."
 }
 
@@ -174,3 +184,4 @@ variable "copy_tags_to_snapshot" {
   default     = true
   description = "Whether to copy tags to snapshots."
 }
+

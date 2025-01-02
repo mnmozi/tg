@@ -1,12 +1,10 @@
 locals {
-  region      = var.region
-  environment = var.environment
+  region               = var.region
+  environment          = var.environment
+  instance_access_type = var.instance_access_type
+  identifier           = coalesce(var.db_name, format("%s-%s-%s", local.environment, local.instance_access_type, "${var.required_tags.project}-${var.required_tags.component}"))
+  snapshot_identifier  = coalesce(var.snapshot_identifier, local.identifier)
 
-  identifier           = (var.db_name == null || var.db_name == "") ? format("%s-%s-%s", local.environment, local.instance_access_type, "${var.required_tags.project}-${var.required_tags.component}") : var.db_name
-  snapshot_identifier  = (var.snapshot_identifier == null || var.snapshot_identifier == "") ? local.identifier : var.snapshot_identifier
-  instance_access_type = var.instance_access_type //"Type and scope of the instance"
-
-  # Merge required tags with additional tags
   tags = merge(
     var.required_tags,
     var.tags,
@@ -14,6 +12,7 @@ locals {
     var.owner != null ? { "owner" = var.owner } : {}
   )
 }
+
 
 data "aws_db_snapshot" "development_final_snapshot" {
   count = var.from_backup ? 1 : 0
@@ -45,12 +44,12 @@ module "instance" {
   parameter_group_use_name_prefix = false
 
   allocated_storage     = var.allocated_storage
-  max_allocated_storage = 0
+  max_allocated_storage = var.max_allocated_storage != 0 ? var.max_allocated_storage : null
 
   username                    = var.username
   storage_type                = var.storage_type
   manage_master_user_password = false
-  password                    = jsondecode(data.aws_secretsmanager_secret_version.tf-secrets.secret_string)[var.password_key]
+  password                    = var.secret_name != null && var.password_key != null ? jsondecode(data.aws_secretsmanager_secret_version.tf-secrets.secret_string)[var.password_key] : var.password
 
   port     = var.port
   multi_az = var.multi_az

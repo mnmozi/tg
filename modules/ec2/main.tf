@@ -1,28 +1,26 @@
 locals {
-  region      = var.region
-  environment = var.environment
-
-  # Naming variables
+  # Tagging and naming
   identifier = "${var.environment}-${var.required_tags.project}-${var.required_tags.component}"
-
-  # Merge required tags with additional tags
   tags = merge(
     var.required_tags,
     var.tags,
-    { "environment" = var.environment, Name = local.identifier },
+    { "environment" = var.environment, "Name" = local.identifier },
     var.owner != null ? { "owner" = var.owner } : {}
   )
+
+  # Architecture mapping
   mapped_arch = lookup({
-    "amazon-linux" = var.arch                                  # Amazon Linux uses x86_64 or arm64
-    "ubuntu"       = var.arch == "x86_64" ? "amd64" : var.arch # Ubuntu uses amd64 for x86_64
+    "amazon-linux" = var.arch
+    "ubuntu"       = var.arch == "x86_64" ? "amd64" : var.arch
   }, var.distro, null)
 
-  # Map the SSM path for each distribution
+  # SSM path mapping
   ssm_path = lookup({
     "amazon-linux" = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-${local.mapped_arch}"
     "ubuntu"       = "/aws/service/canonical/ubuntu/server/24.04/stable/current/${local.mapped_arch}/hvm/ebs-gp3/ami-id"
   }, var.distro, null)
 }
+
 
 data "aws_ssm_parameter" "latest_ami" {
   count = local.ssm_path != null ? 1 : 0
@@ -34,7 +32,10 @@ data "aws_secretsmanager_secret_version" "service_secret" {
   secret_id = each.value
 }
 
+# Conditional creation of the IAM policy
 resource "aws_iam_policy" "role_policy" {
+  count = length(keys(data.aws_secretsmanager_secret_version.service_secret)) > 0 || length(var.custom_role_statements) > 0 ? 1 : 0
+
   name        = local.identifier
   description = "Task role policy for ECS containers"
   policy = jsonencode({
@@ -53,15 +54,20 @@ resource "aws_iam_policy" "role_policy" {
   tags = local.tags
 }
 
+# Module with conditional inclusion of custom_policy
 module "role" {
-  source            = "/Users/mostafa.hamed/mycode/personal/terragrunt/modules/01-ami-role"
+  source            = "github.com/mnmozi/tg//modules/ami-role"
   name              = local.identifier
   is_instance       = true
   principal_service = ["ec2.amazonaws.com"]
-  policies = {
-    amazon_ec2_rolefor_ssm = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-    custom_policy          = aws_iam_policy.role_policy.arn
-  }
+  policies = merge(
+    {
+      amazon_ec2_rolefor_ssm = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    },
+    length(aws_iam_policy.role_policy) > 0 ? {
+      custom_policy = aws_iam_policy.role_policy[0].arn
+    } : {}
+  )
   tags = local.tags
 }
 
@@ -111,12 +117,14 @@ resource "aws_instance" "instance" {
       throughput            = ebs_block_device.value.throughput
       volume_size           = ebs_block_device.value.volume_size
       volume_type           = ebs_block_device.value.volume_type
-      tags                  = merge(local.tags, { "Name" = "extra-${local.identifier}" })
+      tags = merge(
+        local.tags,
+        { "Name" = ebs_block_device.value.name != "" ? ebs_block_device.value.name : "extra-${local.identifier}" }
+      )
     }
   }
 
   vpc_security_group_ids = var.sg
-
-  tags = local.tags
-  # volume_tags = merge(local.tags, { "Name" = "volume-${local.identifier}" })
+  user_data              = var.user_data
+  tags                   = local.tags
 }
