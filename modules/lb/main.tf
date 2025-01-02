@@ -12,6 +12,31 @@ locals {
     { "environment" = var.environment, Name = local.identifier },
     var.owner != null ? { "owner" = var.owner } : {}
   )
+  flat_certificates = flatten([
+    for listener_port, domains in var.certificates : [
+      for domain in slice(domains, 1, length(domains)) : {
+        listener_port = listener_port
+        domain        = domain
+      }
+    ]
+  ])
+  first_certificates = {
+    for listener_port, domains in var.certificates : listener_port => domains[0]
+  }
+}
+
+data "aws_acm_certificate" "certificates" {
+  for_each = { for cert in local.flat_certificates : "${cert.listener_port}-${cert.domain}" => cert }
+
+  domain   = each.value.domain
+  statuses = ["ISSUED"]
+}
+
+data "aws_acm_certificate" "default_certificates" {
+  for_each = local.first_certificates
+
+  domain   = each.value
+  statuses = ["ISSUED"]
 }
 
 resource "aws_lb" "lb" {
@@ -32,12 +57,12 @@ resource "aws_lb" "lb" {
 }
 
 resource "aws_lb_listener" "listeners" {
-  for_each = { for listener in var.listeners : "${listener.protocol}-${listener.port}" => listener }
+  for_each = { for listener in var.listeners : "${listener.port}" => listener }
 
   load_balancer_arn = aws_lb.lb.arn
   port              = each.value.port
   protocol          = each.value.protocol
-  certificate_arn   = each.value.protocol == "HTTPS" ? var.certificate_arn : null
+  certificate_arn   = each.value.protocol == "HTTPS" ? data.aws_acm_certificate.default_certificates["${each.value.port}"].arn : null
 
   default_action {
     type = "fixed-response"
@@ -50,3 +75,14 @@ resource "aws_lb_listener" "listeners" {
   }
   tags = local.tags
 }
+
+resource "aws_lb_listener_certificate" "additional_certificates" {
+  for_each = {
+    for key, value in data.aws_acm_certificate.certificates :
+    key => key
+  }
+
+  listener_arn    = aws_lb_listener.listeners["${split("-", each.key)[0]}"].arn
+  certificate_arn = data.aws_acm_certificate.certificates[each.key].arn
+}
+

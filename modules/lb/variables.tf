@@ -46,11 +46,6 @@ variable "owner" {
   default     = null
 }
 
-variable "certificate_arn" {
-  description = "ARN of the ACM certificate for HTTPS listeners"
-  type        = string
-}
-
 variable "lb_name" {
   description = "name of the lb"
   type        = string
@@ -90,3 +85,8 @@ variable "listeners" {
     protocol = string
   }))
 }
+variable "certificates" {
+  description = "Map of listener names to lists of certificates."
+  type        = map(list(string))
+}
+

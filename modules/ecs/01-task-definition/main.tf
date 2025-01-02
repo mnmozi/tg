@@ -29,10 +29,10 @@ locals {
 }
 
 
-data "aws_ecr_repository" "service" {
-  for_each = toset(var.images_repos)
-  name     = each.key
-}
+# data "aws_ecr_repository" "service" {
+#   for_each = toset(var.images_repos)
+#   name     = each.key
+# }
 
 data "aws_ecr_image" "service_image" {
   for_each = toset(var.images_repos)
