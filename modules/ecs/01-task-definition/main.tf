@@ -28,16 +28,15 @@ locals {
   )
 }
 
+data "aws_ecr_repository" "service_repo" {
+  for_each = { for i, repo_name in tolist(var.images_repos) : i => repo_name }
 
-# data "aws_ecr_repository" "service" {
-#   for_each = toset(var.images_repos)
-#   name     = each.key
-# }
+  name = each.value
+}
 
 data "aws_ecr_image" "service_image" {
-  for_each = toset(var.images_repos)
-
-  repository_name = each.key
+  for_each        = { for i, repo_name in tolist(var.images_repos) : i => repo_name }
+  repository_name = each.value
   image_tag       = local.environment
 }
 
@@ -167,9 +166,9 @@ resource "aws_ecs_task_definition" "service_task_definition" {
   }
 
   container_definitions = jsonencode([
-    for container_name in var.container_names : {
+    for index, container_name in var.container_names : {
       name              = container_name
-      image             = "${data.aws_ecr_image.service_image[container_name].image_uri}"
+      image             = "${data.aws_ecr_repository.service_repo[index].repository_url}@${data.aws_ecr_image.service_image[index].image_digest}"
       cpu               = lookup(var.cpus, container_name, local.cpu / length(var.container_names))
       memoryReservation = lookup(var.memories, container_name, local.memory / length(var.container_names))
       essential         = true
