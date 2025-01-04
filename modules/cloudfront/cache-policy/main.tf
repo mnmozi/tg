@@ -8,6 +8,8 @@ resource "aws_cloudfront_cache_policy" "policies" {
   min_ttl     = each.value.min_ttl
 
   parameters_in_cache_key_and_forwarded_to_origin {
+    enable_accept_encoding_brotli = each.value.enable_accept_encoding_brotli
+    enable_accept_encoding_gzip   = each.value.enable_accept_encoding_gzip
     cookies_config {
       cookie_behavior = each.value.cookies_config.cookie_behavior
     }

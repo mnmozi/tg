@@ -1,0 +1,130 @@
+{
+  "variable": {
+    "region": {
+      "description": "The AWS region where resources will be deployed.",
+      "type": "string"
+    },
+    "environment": {
+      "description": "Deployment environment, such as 'dev', 'staging', or 'production'.",
+      "type": "string"
+    },
+    "owner": {
+      "description": "Owner or responsible entity for the resources.",
+      "type": "string",
+      "default": null
+    },
+    "required_tags": {
+      "description": "Mandatory tags applied to all resources, including project and component tags.",
+      "type": "map",
+      "default": {
+        "project": "example-project",
+        "component": "example-component"
+      }
+    },
+    "tags": {
+      "description": "Additional tags to attach to resources.",
+      "type": "map",
+      "default": {}
+    },
+    "secrets_names": {
+      "description": "List of secret names required by the application.",
+      "type": "list",
+      "default": []
+    },
+    "ami": {
+      "description": "Amazon Machine Image (AMI) ID for EC2 instances.",
+      "type": "string",
+      "default": null
+    },
+    "instance_type": {
+      "description": "EC2 instance type (e.g., t2.micro, m5.large).",
+      "type": "string"
+    },
+    "associate_public_ip_address": {
+      "description": "Specifies whether the instance should have a public IP address.",
+      "type": "bool"
+    },
+    "instance_initiated_shutdown_behavior": {
+      "description": "Defines shutdown behavior for instances (e.g., stop, terminate).",
+      "type": "string",
+      "default": "stop"
+    },
+    "key_name": {
+      "description": "Name of the SSH key pair used for accessing the instance.",
+      "type": "string"
+    },
+    "subnet_id": {
+      "description": "Subnet ID where the instance will be deployed.",
+      "type": "string"
+    },
+    "user_data": {
+      "description": "Startup script executed when the instance launches.",
+      "type": "string",
+      "default": ""
+    },
+    "sg": {
+      "description": "List of security group IDs associated with the instance.",
+      "type": "list(string)"
+    },
+    "distro": {
+      "description": "Operating system distribution (e.g., amazon-linux, ubuntu).",
+      "type": "string",
+      "default": "amazon-linux"
+    },
+    "arch": {
+      "description": "CPU architecture (e.g., x86_64, arm64).",
+      "type": "string",
+      "default": "x86_64"
+    },
+    "spot_enabled": {
+      "description": "Enables use of spot instances for cost savings.",
+      "type": "bool",
+      "default": false
+    },
+    "instance_interruption_behavior": {
+      "description": "Action when a spot instance is interrupted (e.g., terminate, stop).",
+      "type": "string",
+      "default": "terminate"
+    },
+    "spot_instance_type": {
+      "description": "Spot instance type (e.g., one-time, persistent).",
+      "type": "string",
+      "default": "one-time"
+    },
+    "valid_until": {
+      "description": "Expiration date for persistent spot requests (ISO 8601 format).",
+      "type": "string",
+      "default": null
+    },
+    "custom_role_statements": {
+      "description": "Custom IAM role policies, including actions and resources.",
+      "type": "list(object({ Effect = string, Action = list(string), Resource = list(string) }))",
+      "default": []
+    },
+    "metadata": {
+      "description": "Metadata options controlling instance metadata access.",
+      "type": "object({ http_tokens = string, http_endpoint = string })",
+      "default": {
+        "http_tokens": "required",
+        "http_endpoint": "enabled"
+      }
+    },
+    "root_block_device": {
+      "description": "Configuration of the root block device for the instance.",
+      "type": "object({ delete_on_termination = bool, encrypted = bool, iops = number, throughput = number, volume_size = number, volume_type = string })",
+      "default": {
+        "delete_on_termination": true,
+        "encrypted": true,
+        "iops": 3000,
+        "throughput": 125,
+        "volume_size": 100,
+        "volume_type": "gp3"
+      }
+    },
+    "ebs_block_device": {
+      "description": "Configuration of additional EBS block devices.",
+      "type": "list(object({ device_name = string, name = string, delete_on_termination = bool, encrypted = bool, iops = number, throughput = number, volume_size = number, volume_type = string }))",
+      "default": []
+    }
+  }
+}

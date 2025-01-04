@@ -1,11 +1,13 @@
 variable "cache_policies" {
   description = "List of cache policies to create"
   type = list(object({
-    name        = string
-    comment     = string
-    default_ttl = number
-    max_ttl     = number
-    min_ttl     = number
+    name                          = string
+    comment                       = string
+    default_ttl                   = number
+    max_ttl                       = number
+    min_ttl                       = number
+    enable_accept_encoding_brotli = bool
+    enable_accept_encoding_gzip   = bool
     cookies_config = object({
       cookie_behavior = string
     })
