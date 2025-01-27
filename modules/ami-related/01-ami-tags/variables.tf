@@ -28,7 +28,7 @@ variable "region" {
 
 variable "ebs_block_device" {
   description = "list of the ebs devices"
-  type        = list(map)
+  type        = list(map(any))
 }
 
 variable "environment" {
