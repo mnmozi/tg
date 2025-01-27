@@ -10,7 +10,7 @@ variable "tags" {
 }
 
 variable "ami_name" {
-  description = "Name of the AMI"
+  description = "name of the ami"
   type        = string
   default     = null
 }
@@ -28,7 +28,7 @@ variable "region" {
 
 variable "ebs_block_device" {
   description = "list of the ebs devices"
-  type        = list(string)
+  type        = list(map)
 }
 
 variable "environment" {
