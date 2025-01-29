@@ -89,3 +89,8 @@ output "private_elasticache_subnets_cidr_blocks" {
   description = "list of the private elasticache subnets cidrs"
   value       = module.vpc.elasticache_subnets_cidr_blocks
 }
+
+output "private_hosted_zone_id" {
+  description = "ID of the private hosted zone"
+  value       = aws_route53_zone.private[0].zone_id
+}
