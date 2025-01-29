@@ -99,7 +99,15 @@ resource "aws_db_subnet_group" "public_db_subnet_group" {
   subnet_ids = module.vpc.database_subnets
   tags       = merge(local.tags)
 }
+resource "aws_route53_zone" "private" {
+  count = var.private_hosted_zone ? 1 : 0
 
+  name = "${local.vpc_identifier}.com"
+
+  vpc {
+    vpc_id = module.vpc.vpc_id
+  }
+}
 # resource "aws_elasticache_subnet_group" "elasticache_subnet_group" {
 #   count      = var.create_elasticache_subnet ? 1 : 0
 #   name       = "${local.vpc_identifier}-elasticache-subnets"

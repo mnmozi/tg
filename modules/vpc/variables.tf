@@ -121,3 +121,9 @@ variable "enable_nat_gateway" {
   type        = bool
   default     = false
 }
+
+variable "private_hosted_zone" {
+  description = "Should be true if you want to provision private hosted zone"
+  type        = bool
+  default     = false
+}

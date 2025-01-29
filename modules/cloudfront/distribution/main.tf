@@ -55,6 +55,14 @@ resource "aws_cloudfront_distribution" "this" {
           value = custom_header.value.value
         }
       }
+      dynamic "vpc_origin_config" {
+        for_each = each.value.vpc_origin_config != null ? [each.value.vpc_origin_config] : []
+        content {
+          origin_keepalive_timeout = vpc_origin_config.value.origin_keepalive_timeout
+          origin_read_timeout      = vpc_origin_config.value.origin_read_timeout
+          vpc_origin_id            = vpc_origin_config.value.vpc_origin_id
+        }
+      }
     }
   }
 

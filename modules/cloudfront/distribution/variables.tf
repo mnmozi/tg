@@ -60,8 +60,14 @@ variable "origin_config" {
 
       origin_ssl_protocols = list(string)
     }), null)
+    vpc_origin_config = optional(object({
+      origin_keepalive_timeout = optional(number, 5)
+      origin_read_timeout      = optional(number, 30)
+      vpc_origin_id            = string
+    }), null)
   }))
 }
+
 
 variable "cache_policy_ids" {
   type = map(string)
