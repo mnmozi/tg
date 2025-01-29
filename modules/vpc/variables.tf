@@ -127,3 +127,8 @@ variable "private_hosted_zone" {
   type        = bool
   default     = false
 }
+variable "private_hosted_zone_name" {
+  description = "name of the private hosted zone"
+  type        = string
+  default     = ""
+}
