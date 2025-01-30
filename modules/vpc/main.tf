@@ -103,7 +103,7 @@ resource "aws_db_subnet_group" "public_db_subnet_group" {
 resource "aws_route53_zone" "private" {
   count = var.private_hosted_zone ? 1 : 0
 
-  name = var.private_hosted_zone_name != "" ? var.private_hosted_zone_name : "${local.vpc_identifier}.com"
+  name = var.private_hosted_zone_name != "" ? var.private_hosted_zone_name : "${local.region}-${local.vpc_identifier}.com"
 
   vpc {
     vpc_id = module.vpc.vpc_id
