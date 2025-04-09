@@ -32,6 +32,23 @@ data "aws_secretsmanager_secret_version" "service_secret" {
   secret_id = each.value
 }
 
+data "aws_ami" "selected" {
+  count = var.ami_inputs != null ? 1 : 0 # Create the block only if ami_name is set
+
+  executable_users = var.ami_inputs.executable_users
+  most_recent      = var.ami_inputs.most_recent
+  owners           = var.ami_inputs.owners
+  name_regex       = var.ami_inputs.ami_name # Directly use ami_name as regex
+
+  dynamic "filter" {
+    for_each = var.ami_inputs.filters
+    content {
+      name   = filter.value.name
+      values = filter.value.values
+    }
+  }
+}
+
 # Conditional creation of the IAM policy
 resource "aws_iam_policy" "role_policy" {
   count = length(keys(data.aws_secretsmanager_secret_version.service_secret)) > 0 || length(var.custom_role_statements) > 0 ? 1 : 0
@@ -61,6 +78,7 @@ module "role" {
   is_instance       = true
   principal_service = ["ec2.amazonaws.com"]
   policies = merge(
+    var.linked_policies, # Merge additional policies
     {
       amazon_ec2_rolefor_ssm = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
     },
@@ -72,7 +90,8 @@ module "role" {
 }
 
 resource "aws_instance" "instance" {
-  ami = var.ami != null && var.ami != "" ? var.ami : data.aws_ssm_parameter.latest_ami[0].value
+  # ami = var.ami != null && var.ami != "" ? var.ami : data.aws_ssm_parameter.latest_ami[0].value
+  ami = length(data.aws_ami.selected) > 0 ? data.aws_ami.selected[0].id : (var.ami != null && var.ami != "" ? var.ami : data.aws_ssm_parameter.latest_ami[0].value)
 
   instance_type                        = var.instance_type
   associate_public_ip_address          = var.associate_public_ip_address

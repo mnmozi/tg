@@ -40,9 +40,9 @@ variable "tags" {
 }
 
 # RDS settings
-variable "instance_access_type" {
-  type        = string
-  default     = "private"
+variable "publicly_accessible" {
+  type        = bool
+  default     = false
   description = "The type and scope of the instance (e.g., public, private)."
 }
 
@@ -52,8 +52,16 @@ variable "secret_name" {
 }
 variable "password" {
   type        = string
-  default     = ""
   description = "THIS IS NOT RECOMENDED, PLEASE CONSEDER CREATING SECRET AND PASS IT IN secret_name and  password_key."
+  default     = ""
+}
+variable "db_cluster_parameter_group_family" {
+  type    = string
+  default = ""
+}
+variable "db_parameter_group_family" {
+  type    = string
+  default = ""
 }
 
 variable "password_key" {
@@ -70,17 +78,6 @@ variable "engine" {
 variable "engine_version" {
   type        = string
   description = "The version of the database engine to use."
-}
-
-variable "major_engine_version" {
-  type        = string
-  default     = ""
-  description = "The major version of the database engine to use."
-}
-
-variable "family" {
-  type        = string
-  description = "The family of the database parameter group."
 }
 
 variable "instance_class" {
@@ -101,7 +98,7 @@ variable "parameter_group_name" {
 
 variable "allocated_storage" {
   type        = number
-  default     = 15
+  default     = null
   description = "The allocated storage size in GB for the RDS instance."
 }
 
@@ -114,6 +111,10 @@ variable "max_allocated_storage" {
 variable "username" {
   type        = string
   default     = "master_user"
+  description = "The master username for the RDS database."
+}
+variable "instances" {
+  type        = map(any)
   description = "The master username for the RDS database."
 }
 
@@ -164,12 +165,6 @@ variable "iam_database_authentication_enabled" {
   description = "Whether to enable IAM authentication for the RDS instance."
 }
 
-variable "publicly_accessible" {
-  type        = bool
-  default     = false
-  description = "Whether the RDS instance should be publicly accessible."
-}
-
 variable "vpc_security_group_ids" {
   type        = list(string)
   description = "A list of security group IDs to associate with the RDS instance."
@@ -190,5 +185,23 @@ variable "copy_tags_to_snapshot" {
   type        = bool
   default     = true
   description = "Whether to copy tags to snapshots."
+}
+
+variable "delete_automated_backups" {
+  type        = bool
+  default     = true
+  description = "Whether to delete automated backups when cluster is deleted."
+}
+
+variable "backup_retention_period" {
+  type        = number
+  default     = 7
+  description = "period for backup retention."
+}
+
+variable "cluster_performance_insights_retention_period" {
+  type        = number
+  default     = 0
+  description = "period for cluster performance retention."
 }
 

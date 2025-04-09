@@ -130,10 +130,11 @@ module "iam_execution_role" {
   name              = local.iam_execution_role_identifier
   is_instance       = false
   principal_service = ["ecs-tasks.amazonaws.com"]
-  policies = {
-    AmazonECSTaskExecutionRolePolicy = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-    customExecutionPolicy            = aws_iam_policy.execution_role_policy.arn
-  }
+  policies = merge(
+    var.linked_execution_policies, {
+      AmazonECSTaskExecutionRolePolicy = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+      customExecutionPolicy            = aws_iam_policy.execution_role_policy.arn
+  })
   tags = local.tags
 }
 
@@ -143,9 +144,10 @@ module "iam_task_role" {
   name              = local.iam_task_role_identifier
   is_instance       = false
   principal_service = ["ecs-tasks.amazonaws.com"]
-  policies = {
-    customTaskPolicy = aws_iam_policy.task_role_policy.arn
-  }
+  policies = merge(
+    var.linked_task_policies, {
+      customTaskPolicy = aws_iam_policy.task_role_policy.arn
+  })
   tags = local.tags
 }
 

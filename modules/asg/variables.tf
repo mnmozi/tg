@@ -87,11 +87,24 @@ variable "instance_type" {
   default     = ""
 }
 
+variable "launch_template_name" {
+  description = "Name of the launch template to use for the Auto Scaling Group."
+  type        = string
+  default     = ""
+}
+
+variable "launch_template" {
+  description = "Launch template configuration for the Auto Scaling Group."
+  type = object({
+    id      = optional(string)
+    version = optional(string, "$Latest")
+  })
+  default = {}
+}
+
 variable "mixed_instance_policy" {
   description = "Configuration for mixed instance policy."
   type = object({
-    launch_template_id                       = string
-    launch_template_version                  = string
     on_demand_base_capacity                  = optional(number, 0)
     on_demand_percentage_above_base_capacity = optional(number, 0)
     spot_allocation_strategy                 = optional(string, "price-capacity-optimized")
@@ -101,9 +114,16 @@ variable "mixed_instance_policy" {
       weighted_capacity = number
     }))
   })
+  default = null
 }
 
-variable "target_group_arns" {
+variable "target_groups_names" {
+  description = "List of target group names for the Auto Scaling Group."
+  type        = list(string)
+  default     = []
+}
+
+variable "target_groups_arns" {
   description = "List of target group ARNs for the Auto Scaling Group."
   type        = list(string)
   default     = []

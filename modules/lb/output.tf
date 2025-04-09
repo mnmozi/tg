@@ -2,6 +2,14 @@ output "alb" {
   value = aws_lb.lb
 }
 
+output "dns_name" {
+  value = aws_lb.lb.dns_name
+}
+
+output "zone_id" {
+  value = aws_lb.lb.zone_id
+}
+
 output "listeners" {
   description = "Map of all listeners with the port as the key and their details as the value"
   value = {

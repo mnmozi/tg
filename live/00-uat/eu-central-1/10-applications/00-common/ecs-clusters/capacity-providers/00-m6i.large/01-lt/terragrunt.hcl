@@ -3,13 +3,13 @@ terraform {
 }
 
 include "root" {
-  path   = find_in_parent_folders()
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
-dependency "vpc" {
-  config_path = "${get_terragrunt_dir()}/${path_relative_from_include()}/00-infra/00-vpc"
-}
+# dependency "vpc" {
+#   config_path = "${get_terragrunt_dir()}/${path_relative_from_include()}/00-infra/00-vpc"
+# }
 
 dependency "sg" {
   config_path = "../00-sg"
@@ -21,17 +21,17 @@ inputs = {
   # iam_policy_name = "prod-iam-policy"
   # iam_role_name   = "prod-iam-role"
   arch   = "x86_64"
-  distro = "ubuntu"
+  distro = "amazon-linux-ecs"
 
   required_tags = {
-    project   = "yozo"
-    component = "cluster-t3-small-cp"
+    project   = "malab"
+    component = "cluster-m6i.large"
   }
 
   tags = {}
 
-  instance_type = "t3.small"
-  key_name      = "proscripe-prod"
+  instance_type = "m6i.large"
+  key_name      = "dev-instance"
 
   spot_enabled = false
   # spot_instance_type = "one-time"
@@ -43,15 +43,21 @@ inputs = {
   disable_api_termination = false
   ebs_optimized           = true
 
-  metadata = {
-    http_endpoint = "enabled"
-    http_tokens   = "required"
+  metadata_options = {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+    instance_metadata_tags      = "disabled"
   }
 
   monitoring                  = true
-  associate_public_ip_address = true
-  sg_ids                      = [dependency.sg.outputs.sg.id]
-
+  associate_public_ip_address = false
+  sg_ids                      = [dependency.sg.outputs.id]
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+    echo ECS_CLUSTER=prod-malaeb-cluster >> /etc/ecs/ecs.config
+  EOF
+  )
   block_device_mappings = [
     {
       device_name = "/dev/xvda"

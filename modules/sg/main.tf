@@ -21,6 +21,7 @@ data "aws_security_group" "ingress_by_name" {
 data "aws_security_group" "egress_by_name" {
   for_each = var.egress_sg
   name     = each.key
+  vpc_id   = each.value.vpc_id != null ? each.value.vpc_id : var.vpc_id
 }
 
 resource "aws_security_group" "sg" {

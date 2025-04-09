@@ -70,6 +70,8 @@ module "role" {
   principal_service = ["ec2.amazonaws.com"]
 
   policies = merge(
+    var.linked_policies # Merge additional policies
+    ,
     {
       amazon_ec2_rolefor_ssm = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
     },

@@ -14,6 +14,12 @@ variable "lt_name" {
   default     = null
 }
 
+variable "linked_policies" {
+  description = "Additional policies to attach to the IAM role"
+  type        = map(string)
+  default     = {}
+}
+
 variable "iam_policy_name" {
   description = "IAM policy name"
   type        = string

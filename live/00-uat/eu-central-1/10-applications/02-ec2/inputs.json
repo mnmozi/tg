@@ -1,42 +1,32 @@
 {
-  "ec2": {
-    "secrets_names": [],
-    "custom_role_statements": [],
-    "distro": "ubuntu",
-    "instance_type": "t3.small",
-    "spot_enabled": false,
-    "associate_public_ip_address": true,
-    "instance_initiated_shutdown_behavior": "terminate",
-    "key_name": "prod-machines",
-    "metadata": {
-      "http_tokens": "required",
-      "http_endpoint": "enabled"
-    },
-    "root_block_device": {
-      "delete_on_termination": true,
-      "encrypted": true,
-      "iops": 3000,
-      "throughput": 125,
-      "volume_size": 20,
-      "volume_type": "gp3"
-    },
+  "00-sg": {
     "required_tags": {
-      "project": "main",
-      "component": "apps"
-    }
-  },
-  "sg": {
+      "project": "salty",
+      "component": "lb"
+    },
+    "tags": {},
     "ingress_rules": [
       {
         "cidr_blocks": [
           "0.0.0.0/0"
         ],
-        "description": "Allow SSH traffic",
-        "from_port": 22,
-        "to_port": 22,
+        "ipv6_cidr_blocks": [
+          "::/0"
+        ],
+        "description": "Allow all inbound 443 traffic",
+        "from_port": 443,
+        "to_port": 443,
         "protocol": "tcp"
       }
     ],
+    "ingress_sg": {
+      "CloudFront-VPCOrigins-Service-SG": {
+        "description": "Allow HTTPS",
+        "from_port": 443,
+        "to_port": 443,
+        "protocol": "tcp"
+      }
+    },
     "egress_rules": [
       {
         "cidr_blocks": [
@@ -48,9 +38,50 @@
         "protocol": "-1"
       }
     ],
+    "egress_sg": {}
+  },
+  "01-lb": {
+    "internal": false,
+    "idle_timeout": 60,
+    "certificates": {
+      "443": [
+        "*.2shta.com",
+        "random-salt.2shta.com"
+      ]
+    },
+    "listeners": [
+      {
+        "port": 443,
+        "protocol": "HTTPS"
+      },
+      {
+        "port": 80,
+        "protocol": "HTTP"
+      }
+    ],
     "required_tags": {
-      "project": "main",
-      "component": "apps"
+      "project": "salty",
+      "component": "lb"
+    }
+  },
+  "02-cloud-front-vpc-endpoint": {
+    "http_port": 80,
+    "https_port": 443,
+    "origin_protocol_policy": "https-only",
+    "origin_ssl_protocols": [
+      "TLSv1.2"
+    ],
+    "required_tags": {
+      "project": "salty",
+      "component": "lb"
+    }
+  },
+  "03-private-dns-record": {
+    "lb": true,
+    "record": {
+      "name": "internal-lb",
+      "type": "CNAME",
+      "ttl": 300
     }
   }
 }

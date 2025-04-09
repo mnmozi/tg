@@ -68,6 +68,7 @@ variable "ingress_sg" {
   }))
   default = {}
 }
+
 variable "ingress_sg_ids" {
   description = "List of regular ingress rules"
   type = list(object({
@@ -92,6 +93,7 @@ variable "egress_rules" {
     protocol    = string
   }))
 }
+
 variable "egress_sg" {
   description = "Map of security group names and ingress details"
   type = map(object({
@@ -99,6 +101,7 @@ variable "egress_sg" {
     from_port   = number
     to_port     = number
     protocol    = string
+    vpc_id      = optional(string, null) # Optional key with a default value of null
   }))
   default = {}
 }

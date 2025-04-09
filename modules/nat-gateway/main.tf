@@ -25,10 +25,10 @@ resource "aws_nat_gateway" "nat-gateway" {
   depends_on = [aws_eip.nat-gateway-eip]
 }
 
-resource "aws_route" "route-rule" {
-  route_table_id         = var.route_table_id
+resource "aws_route" "route_rule" {
+  for_each               = toset(var.route_table_ids)
+  route_table_id         = each.value
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.nat-gateway.id
   depends_on             = [aws_nat_gateway.nat-gateway]
 }
-

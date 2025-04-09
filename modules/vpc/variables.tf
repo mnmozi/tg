@@ -54,7 +54,7 @@ variable "subnets_per_az" {
   default = {
     private     = 1
     public      = 1
-    database    = 0
+    database    = 1
     elasticache = 0
   }
 }

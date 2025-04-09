@@ -33,9 +33,10 @@ module "instance" {
 
   identifier = local.identifier
 
-  engine         = var.engine
-  engine_version = var.engine_version
-  family         = var.family
+  engine               = var.engine
+  engine_version       = var.engine_version
+  family               = var.family
+  major_engine_version = var.major_engine_version
 
   instance_class = var.instance_class
 

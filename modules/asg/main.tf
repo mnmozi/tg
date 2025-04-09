@@ -14,6 +14,16 @@ locals {
   )
 }
 
+data "aws_launch_template" "default" {
+  name = var.launch_template_name != null ? var.launch_template_name : local.asg_identifier
+}
+
+data "aws_lb_target_group" "tgs" {
+  count = length(var.target_groups_names)
+
+  name = var.target_groups_names[count.index]
+}
+
 resource "aws_autoscaling_group" "asg" {
   name                      = local.asg_identifier
   max_size                  = var.max_size
@@ -29,8 +39,17 @@ resource "aws_autoscaling_group" "asg" {
 
   desired_capacity_type = var.desired_capacity_type
   capacity_rebalance    = var.capacity_rebalance
+
+  dynamic "launch_template" {
+    for_each = (var.launch_template != null || var.launch_template_name != null) && var.mixed_instance_policy == null ? [1] : []
+    content {
+      id      = var.launch_template != null ? var.launch_template.id : data.aws_launch_template.default.id
+      version = var.launch_template != null ? var.launch_template.version : data.aws_launch_template.default.latest_version
+    }
+  }
+
   dynamic "mixed_instances_policy" {
-    for_each = var.instance_type == "" ? [1] : []
+    for_each = var.mixed_instance_policy != null ? [1] : []
     content {
       instances_distribution {
         on_demand_allocation_strategy            = "prioritized"
@@ -41,8 +60,8 @@ resource "aws_autoscaling_group" "asg" {
       }
       launch_template {
         launch_template_specification {
-          launch_template_id = var.mixed_instance_policy.launch_template_id
-          version            = var.mixed_instance_policy.launch_template_version
+          launch_template_id = var.launch_template.id != null ? var.launch_template.id : data.aws_launch_template.default.id
+          version            = var.launch_template.version != null ? var.launch_template.version : data.aws_launch_template.default.latest_version
         }
         dynamic "override" {
           for_each = var.mixed_instance_policy.override
@@ -54,7 +73,8 @@ resource "aws_autoscaling_group" "asg" {
       }
     }
   }
-  target_group_arns = var.target_group_arns
+  target_group_arns = concat(var.target_groups_arns, data.aws_lb_target_group.tgs[*].arn)
+
 
   timeouts {
     delete = "15m"
@@ -68,5 +88,8 @@ resource "aws_autoscaling_group" "asg" {
       value               = tag.value
       propagate_at_launch = false
     }
+  }
+  lifecycle {
+    ignore_changes = [desired_capacity]
   }
 }

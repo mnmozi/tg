@@ -41,6 +41,12 @@ variable "custom_role_statements" {
   default = []
 }
 
+variable "linked_policies" {
+  description = "Additional policies to attach to the IAM role"
+  type        = map(string)
+  default     = {}
+}
+
 variable "ami" {
   description = "AMI ID for the EC2 instance"
   type        = string
@@ -139,6 +145,21 @@ variable "spot_enabled" {
   description = "Enable spot instances (true/false)"
   type        = bool
   default     = false
+}
+
+variable "ami_inputs" {
+  description = "Map containing all inputs for AMI selection"
+  type = object({
+    executable_users = optional(list(string), null)     # Optional, defaults to ["self"]
+    most_recent      = optional(bool, true)             # Optional, defaults to true
+    owners           = optional(list(string), ["self"]) # Optional, defaults to ["self"]
+    ami_name         = optional(string, null)
+    filters = optional(list(object({
+      name   = string
+      values = list(string)
+    })), []) # Default to null, so no filters are applied unless provided
+  })
+  default = null
 }
 
 variable "instance_interruption_behavior" {

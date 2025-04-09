@@ -23,6 +23,14 @@ data "aws_cloudfront_origin_request_policy" "selected" {
   name     = each.value
 }
 
+data "aws_acm_certificate" "amazon_issued" {
+  count       = var.viewer_certificate.acm_domain != null ? 1 : 0
+  domain      = var.viewer_certificate.acm_domain.domain
+  types       = var.viewer_certificate.acm_domain.types
+  statuses    = var.viewer_certificate.acm_domain.statuses
+  most_recent = var.viewer_certificate.acm_domain.most_recent
+}
+
 resource "aws_cloudfront_distribution" "this" {
   enabled         = true
   is_ipv6_enabled = true
@@ -39,7 +47,7 @@ resource "aws_cloudfront_distribution" "this" {
       origin_access_control_id = origin.value.origin_access_control_id
 
       dynamic "custom_origin_config" {
-        for_each = origin.value.custom_origin_config != null ? [origin.value.custom_origin_config] : []
+        for_each = origin.value.custom_origin_config != null && origin.value.vpc_origin_config == null ? [origin.value.custom_origin_config] : []
         content {
           http_port              = lookup(custom_origin_config.value, "http_port", 80)
           https_port             = lookup(custom_origin_config.value, "https_port", 443)
@@ -56,7 +64,7 @@ resource "aws_cloudfront_distribution" "this" {
         }
       }
       dynamic "vpc_origin_config" {
-        for_each = each.value.vpc_origin_config != null ? [each.value.vpc_origin_config] : []
+        for_each = origin.value.vpc_origin_config != null ? [origin.value.vpc_origin_config] : []
         content {
           origin_keepalive_timeout = vpc_origin_config.value.origin_keepalive_timeout
           origin_read_timeout      = vpc_origin_config.value.origin_read_timeout
@@ -101,7 +109,7 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = var.viewer_certificate.acm_certificate_arn
+    acm_certificate_arn      = data.aws_acm_certificate.amazon_issued[0].arn
     ssl_support_method       = var.viewer_certificate.ssl_support_method
     minimum_protocol_version = var.viewer_certificate.minimum_protocol_version
   }

@@ -96,7 +96,7 @@ module "vpc" {
 resource "aws_db_subnet_group" "public_db_subnet_group" {
   count      = var.create_public_db_subnet_group ? 1 : 0
   name       = "${local.vpc_identifier}-public-subnets"
-  subnet_ids = module.vpc.database_subnets
+  subnet_ids = module.vpc.public_subnets
   tags       = merge(local.tags)
 }
 

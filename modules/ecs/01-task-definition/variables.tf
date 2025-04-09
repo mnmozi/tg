@@ -42,6 +42,18 @@ variable "iam_execution_policy_identifier" {
   default = null
 }
 
+variable "linked_execution_policies" {
+  description = "Additional policies to attach to the IAM role"
+  type        = map(string)
+  default     = {}
+}
+
+variable "linked_task_policies" {
+  description = "Additional policies to attach to the IAM role"
+  type        = map(string)
+  default     = {}
+}
+
 variable "service_name" {
   type    = string
   default = null

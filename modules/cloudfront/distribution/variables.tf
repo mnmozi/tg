@@ -130,8 +130,14 @@ variable "origin_request_policy_names" {
 variable "viewer_certificate" {
   description = "Viewer certificate configuration"
   type = object({
-    acm_certificate_arn      = string
+    acm_certificate_arn      = optional(string, null)
     ssl_support_method       = string
     minimum_protocol_version = string
+    acm_domain = optional(object({
+      domain      = string
+      types       = optional(list(string), ["AMAZON_ISSUED"])
+      statuses    = optional(list(string), ["ISSUED"])
+      most_recent = optional(bool, true)
+    }), null)
   })
 }
