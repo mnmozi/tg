@@ -24,3 +24,8 @@ variable "tags" {
   default     = {}
   description = "Tags to assign to all resources created by this module. Example: { 'Environment': 'dev', 'Owner': 'admin' }"
 }
+
+variable "region" {
+  type        = string
+  description = "The AWS region to deploy the resources in."
+}

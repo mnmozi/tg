@@ -15,8 +15,7 @@ inputs = {
   # subnets  = ["172.28.1.0/24", "172.28.2.0/24", "172.28.3.0/24", "172.28.4.0/24"]
   create_public_db_subnet_group           = false
   create_private_elasticache_subnet_group = false
-
-  enable_nat_gateway = false
+  enable_nat_gateway                      = false
 
   required_tags = {
     vpc_name    = "${include.root.inputs.environment}"

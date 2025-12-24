@@ -15,6 +15,7 @@ locals {
 }
 
 data "aws_secretsmanager_secret_version" "tf-secrets" {
+  count     = var.transit_encryption_enabled ? 1 : 0
   secret_id = var.secret_name
 }
 
@@ -30,7 +31,7 @@ resource "aws_elasticache_replication_group" "default" {
   port                       = var.port
   security_group_ids         = var.security_group_ids
   transit_encryption_enabled = var.transit_encryption_enabled
-  auth_token                 = jsondecode(data.aws_secretsmanager_secret_version.tf-secrets.secret_string)[var.secret_key]
+  auth_token                 = var.transit_encryption_enabled ? jsondecode(data.aws_secretsmanager_secret_version.tf-secrets[0].secret_string)[var.secret_key] : null
   subnet_group_name          = var.subnet_group_name
   tags                       = local.tags
 }
