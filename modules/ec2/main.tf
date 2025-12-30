@@ -86,6 +86,7 @@ module "role" {
       custom_policy = aws_iam_policy.role_policy[0].arn
     } : {}
   )
+  region= var.region
   tags = local.tags
 }
 
