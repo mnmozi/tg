@@ -140,7 +140,7 @@ module "iam_execution_role" {
 
 
 module "iam_task_role" {
-  source            = "/Users/mostafa.hamed/mycode/personal/terragrunt/modules/01-ami-role"
+  source            = "github.com/mnmozi/tg//modules/ami-role"
   name              = local.iam_task_role_identifier
   is_instance       = false
   principal_service = ["ecs-tasks.amazonaws.com"]
