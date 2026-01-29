@@ -135,7 +135,8 @@ module "iam_execution_role" {
       AmazonECSTaskExecutionRolePolicy = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
       customExecutionPolicy            = aws_iam_policy.execution_role_policy.arn
   })
-  tags = local.tags
+  region = var.region
+  tags   = local.tags
 }
 
 
@@ -148,7 +149,8 @@ module "iam_task_role" {
     var.linked_task_policies, {
       customTaskPolicy = aws_iam_policy.task_role_policy.arn
   })
-  tags = local.tags
+  region = var.region
+  tags   = local.tags
 }
 
 

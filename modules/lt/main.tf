@@ -79,7 +79,8 @@ module "role" {
       custom_policy = aws_iam_policy.role_policy[0].arn
     } : {}
   )
-  tags = merge(local.tags, { "Name" : local.iam_role_identifier })
+  region = var.region
+  tags   = merge(local.tags, { "Name" : local.iam_role_identifier })
 }
 
 resource "aws_launch_template" "lt" {
