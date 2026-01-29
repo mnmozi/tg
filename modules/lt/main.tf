@@ -64,7 +64,7 @@ resource "aws_iam_policy" "role_policy" {
 }
 
 module "role" {
-  source            = "/Users/mostafa.hamed/mycode/personal/terragrunt/modules/01-ami-role"
+  source            = "github.com/mnmozi/tg//modules/ami-role"
   name              = local.iam_role_identifier
   is_instance       = true
   principal_service = ["ec2.amazonaws.com"]

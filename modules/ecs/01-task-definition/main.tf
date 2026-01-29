@@ -126,7 +126,7 @@ resource "aws_iam_policy" "task_role_policy" {
 }
 
 module "iam_execution_role" {
-  source            = "/Users/mostafa.hamed/mycode/personal/terragrunt/modules/01-ami-role"
+  source            = "github.com/mnmozi/tg//modules/ami-role"
   name              = local.iam_execution_role_identifier
   is_instance       = false
   principal_service = ["ecs-tasks.amazonaws.com"]

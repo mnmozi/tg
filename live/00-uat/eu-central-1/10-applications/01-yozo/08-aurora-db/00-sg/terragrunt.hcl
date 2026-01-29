@@ -1,5 +1,5 @@
 terraform {
-  source = "/Users/mostafa.hamed/mycode/personal/tg/modules/sg"
+  source = "github.com/mnmozi/tg//modules/sg"
 }
 
 include "root" {

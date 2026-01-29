@@ -1,5 +1,5 @@
 terraform {
-  source = "/Users/mostafa.hamed/mycode/personal/tg/modules/db-rds-aurora"
+  source = "github.com/mnmozi/tg//modules/db-rds-aurora"
 }
 
 include "root" {
