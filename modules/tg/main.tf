@@ -17,10 +17,11 @@ locals {
 resource "aws_lb_target_group" "tg" {
   name = local.identifier
 
-  port        = var.target_port
-  protocol    = var.protocol
-  vpc_id      = var.vpc_id
-  target_type = var.target_type
+  port             = var.target_port
+  protocol         = var.protocol
+  protocol_version = var.protocol_version
+  vpc_id           = var.vpc_id
+  target_type      = var.target_type
   health_check {
     path                = var.health_check_path
     protocol            = var.health_check_protocol

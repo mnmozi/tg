@@ -80,9 +80,9 @@ variable "healthy_threshold" {
 }
 
 variable "health_check_matcher" {
-  description = "HTTP status code to use when checking for a successful response from a target."
-  type        = number
-  default     = 200
+  description = "Status code to use when checking for a successful response from a target. For HTTP use status codes (e.g., \"200\"), for gRPC use gRPC status codes (e.g., \"0\" for OK, \"12\" for UNIMPLEMENTED)."
+  type        = string
+  default     = "200"
 }
 
 # Stickiness Variables
@@ -110,6 +110,12 @@ variable "stickiness" {
     type            = "lb_cookie"
   }
   description = "Configuration for stickiness settings"
+}
+
+variable "protocol_version" {
+  description = "Protocol version for the target group (e.g., \"HTTP1\", \"HTTP2\", \"gRPC\"). Defaults to HTTP1."
+  type        = string
+  default     = null
 }
 
 variable "target_type" {
