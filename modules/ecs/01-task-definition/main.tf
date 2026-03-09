@@ -9,14 +9,34 @@ locals {
   iam_task_role_identifier        = (var.iam_task_role_identifier == null || var.iam_task_role_identifier == "") ? "${var.environment}-${var.required_tags.project}-${var.required_tags.component}-task" : var.iam_task_role_identifier
   iam_task_policy_identifier      = (var.iam_task_policy_identifier == null || var.iam_task_policy_identifier == "") ? "${var.environment}-${var.required_tags.project}-${var.required_tags.component}-task" : var.iam_task_policy_identifier
 
-  cpu    = sum(values(var.cpus))
-  memory = sum(values(var.memories))
+  cpu    = var.task_cpu != null ? var.task_cpu : sum(values(var.cpus))
+  memory = var.task_memory != null ? var.task_memory : sum(values(var.memories))
   secret_keys = {
     for container_name, secret_data in data.aws_secretsmanager_secret_version.service_secret :
     container_name => {
       keys       = keys(jsondecode(secret_data.secret_string))
       version_id = secret_data.version_id
     }
+  }
+
+  # Resolve port mappings with consistent types (all numbers stay numbers)
+  resolved_port_mappings = {
+    for name in var.container_names :
+    name => length(lookup(var.port_mappings, name, [])) > 0 ? [
+      for pm in var.port_mappings[name] : {
+        containerPort = tonumber(pm.containerPort)
+        hostPort      = tonumber(pm.hostPort)
+        protocol      = tostring(lookup(pm, "protocol", "tcp"))
+      }
+    ] : (
+      contains(keys(var.containers_port), name) && contains(keys(var.hosts_port), name) ? [
+        {
+          containerPort = tonumber(var.containers_port[name])
+          hostPort      = tonumber(var.hosts_port[name])
+          protocol      = "tcp"
+        }
+      ] : []
+    )
   }
 
   # Merge required tags with additional tags
@@ -52,21 +72,19 @@ resource "aws_iam_policy" "execution_role_policy" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = concat(
-      [
-        (
-          contains(values(var.log_drivers), "awslogs") ? {
-            "Effect" : "Allow",
-            "Action" : [
-              "logs:CreateLogGroup",
-              "logs:CreateLogStream",
-              "logs:PutLogEvents",
-              "logs:DescribeLogStreams",
-              "logs:DescribeLogGroups"
-            ],
-            "Resource" : "*"
-          } : null
-        )
-      ],
+      contains(values(var.log_drivers), "awslogs") || contains(values(var.log_drivers), "awsfirelens") || length(var.firelens_containers) > 0 ? [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+            "logs:DescribeLogStreams",
+            "logs:DescribeLogGroups"
+          ],
+          "Resource" : "*"
+        }
+      ] : [],
       [
         for secret in keys(data.aws_secretsmanager_secret_version.service_secret) : {
           "Effect" : "Allow",
@@ -169,54 +187,84 @@ resource "aws_ecs_task_definition" "service_task_definition" {
     cpu_architecture        = var.cpu_architecture
   }
 
-  container_definitions = jsonencode([
-    for index, container_name in var.container_names : {
-      name              = container_name
-      image             = "${data.aws_ecr_repository.service_repo[index].repository_url}@${data.aws_ecr_image.service_image[index].image_digest}"
-      cpu               = lookup(var.cpus, container_name, local.cpu / length(var.container_names))
-      memoryReservation = lookup(var.memories, container_name, local.memory / length(var.container_names))
-      essential         = true
-      environment       = lookup(var.environment_variables, container_name, [])
-      command           = lookup(var.commands, container_name, null)
-      secrets = [
-        for secret_key in local.secret_keys[container_name].keys : {
-          name      = secret_key
-          valueFrom = "${data.aws_secretsmanager_secret_version.service_secret[container_name].arn}:${secret_key}::${local.secret_keys[container_name].version_id}"
-        }
-      ]
-      # secrets = length(lookup(var.secrets, container_name, [])) > 0 ? [
-      #   for secret_name in lookup(var.secrets, container_name, []) : {
-      #     name      = secret_name
-      #     valueFrom = data.aws_secretsmanager_secret_version.service_secret[container_name].arn
-      #   }
-      # ] : null
-      portMappings = contains(keys(var.containers_port), container_name) && contains(keys(var.hosts_port), container_name) ? [
-        {
-          containerPort = lookup(var.containers_port, container_name, null)
-          hostPort      = lookup(var.hosts_port, container_name, null)
-        }
-      ] : null
+  container_definitions = "[${join(",", concat(
+    [
+      for index, container_name in var.container_names : jsonencode({
+        name              = container_name
+        image             = "${data.aws_ecr_repository.service_repo[index].repository_url}@${data.aws_ecr_image.service_image[index].image_digest}"
+        cpu               = lookup(var.cpus, container_name, local.cpu / length(var.container_names))
+        memoryReservation = lookup(var.memories, container_name, local.memory / length(var.container_names))
+        essential         = true
+        environment       = lookup(var.environment_variables, container_name, [])
+        command           = lookup(var.commands, container_name, null)
+        secrets = [
+          for secret_key in local.secret_keys[container_name].keys : {
+            name      = secret_key
+            valueFrom = "${data.aws_secretsmanager_secret_version.service_secret[container_name].arn}:${secret_key}::${local.secret_keys[container_name].version_id}"
+          }
+        ]
+        portMappings = length(local.resolved_port_mappings[container_name]) > 0 ? local.resolved_port_mappings[container_name] : null
 
-
-      logConfiguration = merge(
-        { logDriver = lookup(var.log_drivers, container_name, "awslogs") },
-        lookup(
-          {
-            awslogs = {
-              options = {
-                "awslogs-group"         = container_name
-                "awslogs-region"        = local.region
-                "awslogs-create-group"  = "true"
-                "awslogs-stream-prefix" = local.service_identifier
+        logConfiguration = merge(
+          { logDriver = lookup(var.log_drivers, container_name, "awslogs") },
+          contains(keys(var.log_options), container_name) ? {
+            options = var.log_options[container_name]
+          } : lookup(
+            {
+              awslogs = {
+                options = {
+                  "awslogs-group"         = container_name
+                  "awslogs-region"        = local.region
+                  "awslogs-create-group"  = "true"
+                  "awslogs-stream-prefix" = local.service_identifier
+                }
               }
-            }
-          },
-          lookup(var.log_drivers, container_name, "awslogs"),
-          {}
+            },
+            lookup(var.log_drivers, container_name, "awslogs"),
+            {}
+          ),
+          contains(keys(var.log_secret_options), container_name) ? {
+            secretOptions = [
+              for opt in var.log_secret_options[container_name] : {
+                name      = opt.name
+                valueFrom = "${data.aws_secretsmanager_secret_version.service_secret[container_name].arn}:${opt.key}::${local.secret_keys[container_name].version_id}"
+              }
+            ]
+          } : {}
         )
-      )
-    }
-  ])
+      })
+    ],
+    [
+      for name, config in var.firelens_containers : jsonencode({
+        name              = name
+        image             = config.image
+        cpu               = config.cpu
+        memoryReservation = config.memory_reservation
+        essential         = config.essential
+        environment       = []
+        mountPoints       = []
+        volumesFrom       = []
+        portMappings      = []
+        user              = config.user
+        logConfiguration = merge(
+          { logDriver = config.log_driver },
+          length(config.log_options) > 0 ? {
+            options = config.log_options
+          } : {
+            options = {
+              "awslogs-group"         = "/ecs/${name}"
+              "awslogs-region"        = local.region
+              "awslogs-create-group"  = "true"
+              "awslogs-stream-prefix" = "firelens"
+            }
+          }
+        )
+        firelensConfiguration = {
+          type = config.firelens_type
+        }
+      })
+    ]
+  ))}]"
   tags = local.tags
 }
 

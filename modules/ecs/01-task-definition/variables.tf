@@ -69,16 +69,34 @@ variable "memories" {
   description = "A map of container names to their respective memory values."
 }
 
+variable "task_cpu" {
+  type        = number
+  default     = null
+  description = "Task-level CPU. If null, defaults to sum of container cpus."
+}
+
+variable "task_memory" {
+  type        = number
+  default     = null
+  description = "Task-level memory. If null, defaults to sum of container memories."
+}
+
 variable "containers_port" {
   type        = map(number)
-  description = "A map of container names to their respective container ports."
+  description = "A map of container names to their respective container ports. Use port_mappings for multiple ports per container."
   default     = {}
 }
 
 variable "hosts_port" {
   type        = map(number)
-  description = "A map of container names to their respective host ports."
+  description = "A map of container names to their respective host ports. Use port_mappings for multiple ports per container."
   default     = {}
+}
+
+variable "port_mappings" {
+  type        = any
+  default     = {}
+  description = "A map of container names to lists of port mappings. Each entry: {containerPort = number, hostPort = number, protocol = string}. Takes precedence over containers_port/hosts_port."
 }
 
 variable "required_tags" {
@@ -132,6 +150,36 @@ variable "log_drivers" {
   type        = map(string)
   default     = {}
   description = "A map of container names to their respective log drivers."
+}
+
+variable "log_options" {
+  type        = map(map(string))
+  default     = {}
+  description = "A map of container names to custom log driver options. When set, overrides the default awslogs options."
+}
+
+variable "log_secret_options" {
+  type = map(list(object({
+    name = string
+    key  = string
+  })))
+  default     = {}
+  description = "A map of container names to secret options for log configuration. 'name' is the option name (e.g., Header), 'key' is the secret key from the same secrets_names secret."
+}
+
+variable "firelens_containers" {
+  type = map(object({
+    image              = string
+    cpu                = optional(number, 0)
+    memory_reservation = optional(number, 51)
+    essential          = optional(bool, true)
+    firelens_type      = optional(string, "fluentbit")
+    log_driver         = optional(string, "awslogs")
+    log_options        = optional(map(string), {})
+    user               = optional(string, "0")
+  }))
+  default     = {}
+  description = "Firelens sidecar containers to add to the task definition."
 }
 
 variable "custom_task_role_statements" {
