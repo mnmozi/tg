@@ -93,10 +93,7 @@ variable "cluster_addons" {
 
 variable "cluster_compute_config" {
   description = "Configuration for EKS Auto Mode compute config"
-  type = object({
-    enabled    = bool
-    node_pools = optional(list(string), ["general-purpose"])
-  })
+  type    = any
   default = {}
 }
 
