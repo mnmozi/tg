@@ -91,12 +91,6 @@ variable "cluster_addons" {
   }
 }
 
-variable "cluster_compute_config" {
-  description = "Configuration for EKS Auto Mode compute config"
-  type    = any
-  default = {}
-}
-
 variable "eks_managed_node_groups" {
   description = "Map of EKS managed node group definitions"
   type        = any

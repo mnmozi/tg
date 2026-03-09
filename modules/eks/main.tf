@@ -25,8 +25,6 @@ module "eks" {
   enable_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions
   authentication_mode                      = var.authentication_mode
 
-  cluster_compute_config = var.cluster_compute_config
-
   cluster_addons             = var.cluster_addons
   cluster_enabled_log_types  = var.cluster_enabled_log_types
   create_kms_key             = var.create_kms_key
