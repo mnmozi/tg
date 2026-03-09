@@ -97,7 +97,7 @@ variable "cluster_compute_config" {
     enabled    = bool
     node_pools = optional(list(string), ["general-purpose"])
   })
-  default = null
+  default = {}
 }
 
 variable "eks_managed_node_groups" {
