@@ -54,6 +54,15 @@ resource "aws_iam_policy" "lambda_policy" {
           Resource = data.aws_secretsmanager_secret_version.lambda_secret[secret].arn
         }
       ],
+      var.s3_bucket != null ? [
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:GetObject"
+          ]
+          Resource = "arn:aws:s3:::${var.s3_bucket}/${var.s3_key}"
+        }
+      ] : [],
       var.custom_policy_statements
     )
   })
