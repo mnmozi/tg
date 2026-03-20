@@ -38,3 +38,13 @@ variable "noncurrent_version_keep_count" {
   default     = null
   description = "Number of noncurrent versions to keep. If set, older noncurrent versions will be deleted."
 }
+
+# Static website hosting
+variable "static_website" {
+  type = object({
+    index_document = optional(string, "index.html")
+    error_document = optional(string, "error.html")
+  })
+  default     = null
+  description = "Enable static website hosting. When set, public access is allowed and a bucket policy for public read is created."
+}

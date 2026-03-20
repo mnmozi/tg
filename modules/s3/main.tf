@@ -17,18 +17,37 @@ module "s3_bucket" {
 
   bucket = local.identifier
 
-  block_public_acls       = true
-  block_public_policy     = true
-  restrict_public_buckets = true
-  ignore_public_acls      = true
+  block_public_acls       = var.static_website != null ? false : true
+  block_public_policy     = var.static_website != null ? false : true
+  restrict_public_buckets = var.static_website != null ? false : true
+  ignore_public_acls      = var.static_website != null ? false : true
 
-  server_side_encryption_configuration = {
+  server_side_encryption_configuration = var.static_website != null ? {} : {
     rule = {
       apply_server_side_encryption_by_default = {
         sse_algorithm = "aws:kms"
       }
     }
   }
+
+  website = var.static_website != null ? {
+    index_document = var.static_website.index_document
+    error_document = var.static_website.error_document
+  } : {}
+
+  attach_policy = var.static_website != null
+  policy = var.static_website != null ? jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "PublicReadGetObject"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "arn:aws:s3:::${local.identifier}/*"
+      }
+    ]
+  }) : null
 
   versioning = {
     enabled = var.versioning
