@@ -1,5 +1,15 @@
+data "aws_route53_zone" "lookup" {
+  count        = var.zone_id == null ? 1 : 0
+  name         = var.zone_name
+  private_zone = var.private_zone
+}
+
+locals {
+  zone_id = var.zone_id != null ? var.zone_id : data.aws_route53_zone.lookup[0].zone_id
+}
+
 resource "aws_route53_record" "record" {
-  zone_id = var.zone_id
+  zone_id = local.zone_id
   name    = var.record.name
   type    = var.record.type
   ttl     = lookup(var.record, "ttl", null)

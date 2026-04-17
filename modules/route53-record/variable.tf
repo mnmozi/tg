@@ -4,14 +4,16 @@ variable "region" {
 }
 
 variable "zone_id" {
-  description = "Name of the Route 53 zone"
+  description = "ID of the Route 53 zone. If not provided, zone_name will be used to look it up."
   type        = string
+  default     = null
 }
 
-# variable "zone_name" {
-#   description = "Name of the Route 53 zone"
-#   type        = string
-# }
+variable "zone_name" {
+  description = "Name of the Route 53 zone. Used to look up zone_id if zone_id is not provided."
+  type        = string
+  default     = null
+}
 
 variable "private_zone" {
   description = "Whether the Route 53 zone is private"
