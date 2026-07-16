@@ -64,6 +64,7 @@ resource "aws_ecs_service" "service" {
   lifecycle {
     ignore_changes = [desired_count]
   }
+  propagate_tags        = var.propagate_tags
   wait_for_steady_state = var.wait_for_steady_state
   tags                  = local.tags
 }

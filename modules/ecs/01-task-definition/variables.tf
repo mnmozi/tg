@@ -99,6 +99,12 @@ variable "port_mappings" {
   description = "A map of container names to lists of port mappings. Each entry: {containerPort = number, hostPort = number, protocol = string}. Takes precedence over containers_port/hosts_port."
 }
 
+variable "images_tags" {
+  type        = map(string)
+  default     = {}
+  description = "Optional per-repo image tag override (repo name => tag). Repos not listed fall back to the environment name."
+}
+
 variable "required_tags" {
   type = object({
     project   = string

@@ -57,7 +57,7 @@ data "aws_ecr_repository" "service_repo" {
 data "aws_ecr_image" "service_image" {
   for_each        = { for i, repo_name in tolist(var.images_repos) : i => repo_name }
   repository_name = each.value
-  image_tag       = local.environment
+  image_tag       = lookup(var.images_tags, each.value, local.environment)
 }
 
 data "aws_secretsmanager_secret_version" "service_secret" {

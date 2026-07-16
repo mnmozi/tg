@@ -38,6 +38,12 @@ variable "owner" {
   default     = null
 }
 
+variable "propagate_tags" {
+  type        = string
+  default     = null
+  description = "Propagate tags to tasks: SERVICE or TASK_DEFINITION. Null keeps AWS default (no propagation)."
+}
+
 variable "cluster_name" {
   description = "The name of the ECS cluster"
   type        = string
