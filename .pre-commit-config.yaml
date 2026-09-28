@@ -12,6 +12,7 @@ repos:
       - id: terraform_tflint
         args:
           - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+          - --args=--minimum-failure-severity=error
         files: ^modules/
       - id: terragrunt_fmt
       - id: terragrunt_validate

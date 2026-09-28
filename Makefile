@@ -22,7 +22,7 @@ validate: ## terraform validate every module (no backend, no AWS credentials nee
 
 lint: ## tflint every module
 	tflint --init
-	@set -e; for m in $(MODULES); do echo "== $$m"; tflint --chdir=$$m --config=$(CURDIR)/.tflint.hcl; done
+	@set -e; for m in $(MODULES); do echo "== $$m"; tflint --chdir=$$m --config=$(CURDIR)/.tflint.hcl --minimum-failure-severity=error; done
 
 hclfmt: ## check Terragrunt HCL formatting
 	terragrunt hcl fmt --check

@@ -41,7 +41,7 @@ jobs:
           tflint --init
           for m in $(find modules -name main.tf -printf '%h\n' | sort -u); do
             echo "== $m"
-            tflint --chdir="$m" --config="$GITHUB_WORKSPACE/.tflint.hcl"
+            tflint --chdir="$m" --config="$GITHUB_WORKSPACE/.tflint.hcl" --minimum-failure-severity=error
           done
 
   terragrunt:

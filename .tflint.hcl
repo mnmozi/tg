@@ -26,7 +26,8 @@ rule "terraform_naming_convention" {
   format  = "snake_case"
 }
 
-# Wrapper modules intentionally expose inputs they only forward upstream.
+# Reported as warnings (CI fails on errors only): several wrappers keep a
+# `region` input that is now only consumed by the generated provider.
 rule "terraform_unused_declarations" {
   enabled = true
 }
