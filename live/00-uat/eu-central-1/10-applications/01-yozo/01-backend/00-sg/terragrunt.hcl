@@ -1,16 +1,16 @@
 terraform {
-  source = "${path_relative_from_include()}/../../../modules/sg"
+  source = "${get_repo_root()}/modules//sg"
 }
 
 include "root" {
-  path   = find_in_parent_folders()
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 dependency "lb_sg" {
-  config_path = "${path_relative_from_include()}/10-applications/00-common/lbs/01-external-lb/00-sg"
+  config_path = "${get_parent_terragrunt_dir()}/10-applications/00-common/lbs/01-external-lb/00-sg"
 }
 dependency "vpc" {
-  config_path = "${get_terragrunt_dir()}/${path_relative_from_include()}/00-infra/00-vpc"
+  config_path = "${get_parent_terragrunt_dir()}/00-infra/00-vpc"
 }
 
 inputs = {
@@ -34,14 +34,7 @@ inputs = {
   ]
 
 
-  ingress_sg = {
-    # staging-yozo-application  = {
-    #   description = "Allow traffic from Security Group sg1"
-    #   from_port   = 5432
-    #   to_port     = 5432
-    #   protocol    = "tcp"
-    # }
-  }
+  ingress_sg = {}
 
   egress_rules = [
     {

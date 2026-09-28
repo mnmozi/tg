@@ -1,5 +1,5 @@
 terraform {
-  source = "github.com/mnmozi/tg//modules/sg"
+  source = "${get_repo_root()}/modules//sg"
 }
 
 include "root" {
@@ -7,8 +7,12 @@ include "root" {
   expose = true
 }
 
+dependency "app_sg" {
+  config_path = "../../01-backend/00-sg"
+}
+
 dependency "vpc" {
-  config_path = "${get_terragrunt_dir()}/${path_relative_from_include()}/00-infra/00-vpc"
+  config_path = "${get_parent_terragrunt_dir()}/00-infra/00-vpc"
 }
 
 inputs = {
@@ -23,15 +27,15 @@ inputs = {
 
   tags = merge(include.root.inputs.tags, {})
 
-  # ingress_sg_ids = [
-  #   {
-  #     security_groups = [dependency.app_sg.outputs.id]
-  #     description     = "allow port 5432"
-  #     from_port       = 5432
-  #     to_port         = 5432
-  #     protocol        = "tcp"
-  #   }
-  # ]
+  ingress_sg_ids = [
+    {
+      security_groups = [dependency.app_sg.outputs.id]
+      description     = "allow the backend to reach the cluster port"
+      from_port       = 5432
+      to_port         = 5432
+      protocol        = "tcp"
+    }
+  ]
 
   egress_rules = [
     {

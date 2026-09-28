@@ -1,5 +1,5 @@
 terraform {
-  source = "${path_relative_from_include()}/../../../modules/lt"
+  source = "${get_repo_root()}/modules//lt"
 }
 
 include "root" {
@@ -7,25 +7,22 @@ include "root" {
   expose = true
 }
 
-# dependency "vpc" {
-#   config_path = "${get_terragrunt_dir()}/${path_relative_from_include()}/00-infra/00-vpc"
-# }
-
 dependency "sg" {
   config_path = "../00-sg"
 }
 
+dependency "cluster" {
+  config_path = "${get_parent_terragrunt_dir()}/10-applications/00-common/ecs-clusters/yozo-applications"
+}
+
 inputs = {
   default_version = 1
-  # lt_name = "prod-launch-template"
-  # iam_policy_name = "prod-iam-policy"
-  # iam_role_name   = "prod-iam-role"
-  arch   = "x86_64"
-  distro = "amazon-linux-ecs"
+  arch            = "x86_64"
+  distro          = "amazon-linux-ecs"
 
   required_tags = {
-    project   = "malab"
-    component = "cluster-m6i.large"
+    project   = "yozo"
+    component = "ecs-m6i-large"
   }
 
   tags = {}
@@ -34,10 +31,7 @@ inputs = {
   key_name      = "dev-instance"
 
   spot_enabled = false
-  # spot_instance_type = "one-time"
-
-
-  cpu_credits = "unlimited"
+  cpu_credits  = "unlimited"
 
   disable_api_stop        = false
   disable_api_termination = false
@@ -53,11 +47,13 @@ inputs = {
   monitoring                  = true
   associate_public_ip_address = false
   sg_ids                      = [dependency.sg.outputs.id]
-  user_data = base64encode(<<-EOF
+
+  user_data = base64encode(<<-EOT
     #!/bin/bash
-    echo ECS_CLUSTER=prod-malaeb-cluster >> /etc/ecs/ecs.config
-  EOF
+    echo ECS_CLUSTER=${dependency.cluster.outputs.cluster_name} >> /etc/ecs/ecs.config
+  EOT
   )
+
   block_device_mappings = [
     {
       device_name = "/dev/xvda"

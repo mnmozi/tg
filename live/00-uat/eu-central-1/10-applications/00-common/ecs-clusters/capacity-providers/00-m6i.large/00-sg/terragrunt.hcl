@@ -1,5 +1,5 @@
 terraform {
-  source = "${path_relative_from_include()}/../../../modules/sg"
+  source = "${get_repo_root()}/modules//sg"
 }
 
 include "root" {
@@ -7,26 +7,22 @@ include "root" {
   expose = true
 }
 
+dependency "vpc" {
+  config_path = "${get_parent_terragrunt_dir()}/00-infra/00-vpc"
+}
+
 inputs = {
   vpc_id = dependency.vpc.outputs.vpc_id
 
   required_tags = {
-    project   = "malaeb"
-    component = "cluster"
+    project   = "yozo"
+    component = "ecs-m6i-large"
   }
 
   tags = merge(include.root.inputs.tags, {})
 
   ingress_rules = []
-
-  ingress_sg = {
-    # staging-yozo-application  = {
-    #   description = "Allow traffic from Security Group sg1"
-    #   from_port   = 5432
-    #   to_port     = 5432
-    #   protocol    = "tcp"
-    # }
-  }
+  ingress_sg    = {}
 
   egress_rules = [
     {

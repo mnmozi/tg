@@ -1,14 +1,14 @@
 terraform {
-  source = "${path_relative_from_include()}/../../../modules/cloudfront/distribution"
+  source = "${get_repo_root()}/modules//cloudfront/distribution"
 }
 
 include "root" {
-  path   = find_in_parent_folders()
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
 dependency "lb" {
-  config_path = "${path_relative_from_include()}/10-applications/00-common/lbs/01-external-lb/01-lb"
+  config_path = "${get_parent_terragrunt_dir()}/10-applications/00-common/lbs/01-external-lb/01-lb"
 }
 
 dependency "caching_policy" {
@@ -57,16 +57,6 @@ inputs = {
     }
   ]
 
-  # default_cache_behavior = {
-  #   target_origin_id         = dependency.lb.outputs.alb.name
-  #   allowed_methods          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-  #   cached_methods           = ["GET", "HEAD"]
-  #   compress                 = true
-  #   viewer_protocol_policy   = "redirect-to-https"
-  #   cache_policy_id          = dependency.caching_policy.outputs.cache_policy_ids[0]
-  #   origin_request_policy_id = "Managed-AllViewer"
-  # }
-
   ordered_cache_behaviors = {
     default = {
       path_pattern             = ""
@@ -88,7 +78,7 @@ inputs = {
   }
 
   cache_policy_ids = {
-    default = dependency.caching_policy.outputs.cache_policy_ids[0].name
+    default = dependency.caching_policy.outputs.cache_policy_ids["0"].name
     images  = "Managed-CachingOptimized"
   }
 

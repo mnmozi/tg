@@ -1,20 +1,17 @@
 terraform {
-  source = "../../../../../../../modules/elasticache"
+  source = "${get_repo_root()}/modules//elasticache"
 }
 
 include "root" {
-  path   = find_in_parent_folders()
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
-dependency "vpc" {
-  config_path = "${get_terragrunt_dir()}/${path_relative_from_include()}/00-infra/00-vpc"
-}
 dependency "sg" {
   config_path = "../00-sg"
 }
+
 inputs = {
-  # cluster_name = "staging-yozo-elasticache"
   required_tags = {
     project   = "yozo"
     component = "elasticache"
@@ -31,5 +28,10 @@ inputs = {
   port                       = 6379
   security_group_ids         = [dependency.sg.outputs.id]
   transit_encryption_enabled = true
-  subnet_group_name          = "staging-vpc" //dependency.vpc.outputs.private_elasticache_subnet_group_name
+
+  # The VPC unit does not create ElastiCache subnets (create_elasticache_subnet
+  # is false), so this subnet group was created outside Terraform. Switch to
+  # the VPC unit's private_elasticache_subnet_group_name output once the VPC
+  # manages it.
+  subnet_group_name = "staging-vpc"
 }

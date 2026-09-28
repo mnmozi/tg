@@ -1,32 +1,27 @@
 terraform {
-  source = "${path_relative_from_include()}/../../../modules/ecs/03-service"
+  source = "${get_repo_root()}/modules//ecs/03-service"
 }
+
 include "root" {
-  path   = find_in_parent_folders()
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
 dependency "vpc" {
-  config_path = "${get_terragrunt_dir()}/${path_relative_from_include()}/00-infra/00-vpc"
-}
-dependency "cluster" {
-  config_path = "${get_terragrunt_dir()}/${path_relative_from_include()}/10-applications/00-common/ecs-clusters/yozo-applications"
+  config_path = "${get_parent_terragrunt_dir()}/00-infra/00-vpc"
 }
 
-# dependency "lt" {
-#   config_path = "../01-lt"
-# }
-dependency "sg" {
-  config_path = "../02-sg"
+dependency "cluster" {
+  config_path = "${get_parent_terragrunt_dir()}/10-applications/00-common/ecs-clusters/yozo-applications"
 }
-# dependency "tg" {
-#   config_path = "../03-tg"
-# }
+
+dependency "sg" {
+  config_path = "../00-sg"
+}
 
 dependency "task_definition" {
   config_path = "../01-task-definition"
 }
-
 
 inputs = {
   cluster_name                      = dependency.cluster.outputs.cluster_name
@@ -34,13 +29,13 @@ inputs = {
   desired_count                     = 1
   health_check_grace_period_seconds = 30
   enable_execute_command            = true
+
   required_tags = {
     project   = "yozo"
     component = "sidekiq"
   }
 
   tags = {}
-
 
   capacity_providers = [
     {
@@ -57,19 +52,9 @@ inputs = {
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 100
 
-  subnets = dependency.vpc.outputs.public_subnets
-
-  sg = [dependency.sg.outputs.id]
-
+  subnets          = dependency.vpc.outputs.public_subnets
+  sg               = [dependency.sg.outputs.id]
   assign_public_ip = true
-
-  # load_balancers = [
-  #   {
-  #     target_group_arn = dependency.tg.outputs.arn
-  #     container_name   = dependency.task_definition.outputs.container_names[0]
-  #     container_port   = dependency.task_definition.outputs.container_ports[dependency.task_definition.outputs.container_names[0]]
-  #   },
-  # ]
 
   wait_for_steady_state = false
 }

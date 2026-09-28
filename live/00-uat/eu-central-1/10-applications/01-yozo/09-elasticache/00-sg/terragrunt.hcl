@@ -1,20 +1,20 @@
 terraform {
-  source = "../../../../../../../modules/sg"
+  source = "${get_repo_root()}/modules//sg"
 }
 
 include "root" {
-  path   = find_in_parent_folders()
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
 dependency "vpc" {
-  config_path = "${get_terragrunt_dir()}/${path_relative_from_include()}/00-infra/00-vpc"
+  config_path = "${get_parent_terragrunt_dir()}/00-infra/00-vpc"
 }
 dependency "app_sg" {
-  config_path = "../../00-sg"
+  config_path = "../../01-backend/00-sg"
 }
 dependency "sidekiq_sg" {
-  config_path = "../../02-sidekiq/02-sg"
+  config_path = "../../02-sidekiq/00-sg"
 }
 
 inputs = {

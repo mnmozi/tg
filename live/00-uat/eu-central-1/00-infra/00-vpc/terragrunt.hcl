@@ -1,20 +1,18 @@
 terraform {
-  source = "../../../../../modules/vpc"
+  source = "${get_repo_root()}/modules//vpc"
 }
 
 include "root" {
-  path   = find_in_parent_folders()
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
 inputs = {
-  # VPC Variables
-  cidr_b_block = 20
-  cidr_prefix  = 16
+  # 10.1.0.0/16 is the module default and what is deployed; keep it explicit.
+  cidr         = "10.1.0.0/16"
   subnet_sizes = [2, 2, 2, 6, 6, 6, 8, 8, 8, 8, 8, 8]
 
   required_tags = {
-    vpc_name    = "${include.root.inputs.environment}"
     environment = include.root.inputs.environment
     project     = "infra"
     component   = "networking"
@@ -23,7 +21,6 @@ inputs = {
 
   tags = merge(include.root.inputs.tags, {})
 
-  create_public_db_subnet_group           = false
-  create_private_elasticache_subnet_group = true
-  enable_nat_gateway                      = false
+  create_public_db_subnet_group = false
+  enable_nat_gateway            = false
 }

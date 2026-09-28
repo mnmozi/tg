@@ -1,8 +1,8 @@
 {
-  "00-sg": {
+  "sg": {
     "required_tags": {
       "project": "salty",
-      "component": "lb"
+      "component": "api"
     },
     "tags": {},
     "ingress_rules": [
@@ -13,20 +13,13 @@
         "ipv6_cidr_blocks": [
           "::/0"
         ],
-        "description": "Allow all inbound 443 traffic",
+        "description": "Allow HTTPS from anywhere",
         "from_port": 443,
         "to_port": 443,
         "protocol": "tcp"
       }
     ],
-    "ingress_sg": {
-      "CloudFront-VPCOrigins-Service-SG": {
-        "description": "Allow HTTPS",
-        "from_port": 443,
-        "to_port": 443,
-        "protocol": "tcp"
-      }
-    },
+    "ingress_sg": {},
     "egress_rules": [
       {
         "cidr_blocks": [
@@ -40,48 +33,24 @@
     ],
     "egress_sg": {}
   },
-  "01-lb": {
-    "internal": false,
-    "idle_timeout": 60,
-    "certificates": {
-      "443": [
-        "*.2shta.com",
-        "random-salt.2shta.com"
-      ]
+  "ec2": {
+    "required_tags": {
+      "project": "salty",
+      "component": "api"
     },
-    "listeners": [
-      {
-        "port": 443,
-        "protocol": "HTTPS"
-      },
-      {
-        "port": 80,
-        "protocol": "HTTP"
-      }
-    ],
-    "required_tags": {
-      "project": "salty",
-      "component": "lb"
-    }
-  },
-  "02-cloud-front-vpc-endpoint": {
-    "http_port": 80,
-    "https_port": 443,
-    "origin_protocol_policy": "https-only",
-    "origin_ssl_protocols": [
-      "TLSv1.2"
-    ],
-    "required_tags": {
-      "project": "salty",
-      "component": "lb"
-    }
-  },
-  "03-private-dns-record": {
-    "lb": true,
-    "record": {
-      "name": "internal-lb",
-      "type": "CNAME",
-      "ttl": 300
+    "tags": {},
+    "distro": "amazon-linux",
+    "arch": "x86_64",
+    "instance_type": "t3.small",
+    "associate_public_ip_address": true,
+    "key_name": "dev-instance",
+    "root_block_device": {
+      "delete_on_termination": true,
+      "encrypted": true,
+      "iops": 3000,
+      "throughput": 125,
+      "volume_size": 20,
+      "volume_type": "gp3"
     }
   }
 }

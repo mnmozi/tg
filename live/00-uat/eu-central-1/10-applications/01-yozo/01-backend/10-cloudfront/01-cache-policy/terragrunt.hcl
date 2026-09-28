@@ -1,9 +1,9 @@
 terraform {
-  source = "${path_relative_from_include()}/../../../modules/cloudfront/cache-policy"
+  source = "${get_repo_root()}/modules//cloudfront/cache-policy"
 }
 
 include "root" {
-  path   = find_in_parent_folders()
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 

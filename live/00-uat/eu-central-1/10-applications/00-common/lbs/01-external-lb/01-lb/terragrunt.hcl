@@ -1,14 +1,14 @@
 terraform {
-  source = "${path_relative_from_include()}/../../../modules/lb"
+  source = "${get_repo_root()}/modules//lb"
 }
 
 include "root" {
-  path   = find_in_parent_folders()
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
 dependency "vpc" {
-  config_path = "${get_terragrunt_dir()}/${path_relative_from_include()}/00-infra/00-vpc"
+  config_path = "${get_parent_terragrunt_dir()}/00-infra/00-vpc"
 }
 
 dependency "sg" {
@@ -16,7 +16,6 @@ dependency "sg" {
 }
 
 inputs = {
-
   required_tags = {
     project   = "yozo"
     component = "lb"
@@ -24,22 +23,18 @@ inputs = {
 
   tags = {}
 
-  certificate_arn = "arn:aws:acm:eu-central-1:613725395756:certificate/2eb6a629-fade-44be-99d3-5b6224faac95"
-
   security_group_ids = [dependency.sg.outputs.id]
+  subnets            = dependency.vpc.outputs.public_subnets
+  internal           = false
 
-  subnets  = dependency.vpc.outputs.public_subnets
-  internal = false
   listeners = [
-    # {
-    #   port     = 80
-    #   protocol = "HTTP"
-    # },
     {
       port     = 443
       protocol = "HTTPS"
     }
   ]
+
+  listener_certificate_arns = {
+    "443" = "arn:aws:acm:eu-central-1:613725395756:certificate/2eb6a629-fade-44be-99d3-5b6224faac95"
+  }
 }
-
-

@@ -1,9 +1,9 @@
 terraform {
-  source = "github.com/mnmozi/tg//modules/ami-related/00-ami"
+  source = "${get_repo_root()}/modules//ami-related/00-ami"
 }
 
 include "root" {
-  path   = find_in_parent_folders()
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
@@ -14,6 +14,6 @@ include "root" {
 inputs = merge(
   jsondecode(file("${get_terragrunt_dir()}/../inputs.json")).ami,
   {
-    instance_id = "i-09112688f94f51e9b" //dependency.ec2.outpus.ec2.id
+    instance_id = "i-09112688f94f51e9b" # or dependency.ec2.outputs.id once the ec2 unit is applied
   }
 )

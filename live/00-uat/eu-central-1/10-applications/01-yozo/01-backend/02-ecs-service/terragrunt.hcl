@@ -1,16 +1,16 @@
 terraform {
-  source = "${path_relative_from_include()}/../../../modules/ecs/03-service"
+  source = "${get_repo_root()}/modules//ecs/03-service"
 }
 include "root" {
-  path   = find_in_parent_folders()
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
 dependency "vpc" {
-  config_path = "${get_terragrunt_dir()}/${path_relative_from_include()}/00-infra/00-vpc"
+  config_path = "${get_parent_terragrunt_dir()}/00-infra/00-vpc"
 }
 dependency "cluster" {
-  config_path = "${get_terragrunt_dir()}/${path_relative_from_include()}/10-applications/00-common/ecs-clusters/yozo-applications"
+  config_path = "${get_parent_terragrunt_dir()}/10-applications/00-common/ecs-clusters/yozo-applications"
 }
 
 dependency "sg" {

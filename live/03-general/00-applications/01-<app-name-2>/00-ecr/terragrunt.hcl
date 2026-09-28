@@ -1,9 +1,9 @@
 terraform {
-  source = "../../../../../modules/ecs/00-ecr"
+  source = "${get_repo_root()}/modules//ecs/00-ecr"
 }
 
-include "environment" {
-  path   = find_in_parent_folders("environment.hcl")
+include "root" {
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
@@ -17,7 +17,7 @@ inputs = {
   tags = {}
   required_tags = {
     project   = "project-name"
-    component = "componen-name"
+    component = "component-name"
   }
   scan_on_push = false
 }

@@ -1,9 +1,9 @@
 terraform {
-  source = "github.com/mnmozi/tg//modules/ami-related/01-ami-tags"
+  source = "${get_repo_root()}/modules//ami-related/01-ami-tags"
 }
 
 include "root" {
-  path   = find_in_parent_folders()
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 

@@ -1,9 +1,9 @@
 terraform {
-  source = "../../../../../../../modules/ecs/02-cluster"
+  source = "${get_repo_root()}/modules//ecs/02-cluster"
 }
 
 include "root" {
-  path   = find_in_parent_folders()
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 

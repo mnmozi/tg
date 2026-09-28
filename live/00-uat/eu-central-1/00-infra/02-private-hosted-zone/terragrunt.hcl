@@ -1,9 +1,9 @@
 terraform {
-  source = "../../../../../modules/route53-hosted-zone"
+  source = "${get_repo_root()}/modules//route53-hosted-zone"
 }
 
 include "root" {
-  path   = find_in_parent_folders()
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
@@ -12,12 +12,9 @@ dependency "vpc" {
 }
 
 inputs = {
-
   required_tags = {
-    environment = include.root.inputs.environment
-    project     = "infra"
-    component   = "networking"
-    critical    = "yes"
+    project   = "infra"
+    component = "networking"
   }
 
   tags = merge(include.root.inputs.tags, {})
@@ -25,8 +22,8 @@ inputs = {
   zone_name = "internal.2shta.com"
   vpc_associations = [
     {
-      vpc_id     = dependency.outputs.vpc_id
-      vpc_region = dependency.root.outputs.region
+      vpc_id     = dependency.vpc.outputs.vpc_id
+      vpc_region = include.root.locals.region
     }
   ]
 }

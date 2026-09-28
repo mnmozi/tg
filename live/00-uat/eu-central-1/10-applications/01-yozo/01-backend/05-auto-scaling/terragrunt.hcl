@@ -1,6 +1,5 @@
-
 terraform {
-  source = "${path_relative_from_include()}/../../../modules/aws_appautoscaling_policy"
+  source = "${get_repo_root()}/modules//ecs/04-autoscaling"
 }
 
 include "root" {
@@ -16,23 +15,23 @@ inputs = {
   ecs_service_target = {
     max_capacity       = 5
     min_capacity       = 3
-    resource_id        = "service/${dependency.service.outputs.service.cluster}/${dependency.service.outputs.service.name}"
+    resource_id        = "service/${dependency.service.outputs.cluster_name}/${dependency.service.outputs.name}"
     scalable_dimension = "ecs:service:DesiredCount"
     service_namespace  = "ecs"
   }
 
-  service_name = "${dependency.service.outputs.service.name}"
+  service_name = dependency.service.outputs.name
 
   scaling_schedules = [
     {
-      name     = "scale-in"
+      name     = "business-hours"
       schedule = "cron(0 13 * * ? *)"
       timezone = "Asia/Dubai"
       min_cap  = 3
       max_cap  = 5
     },
     {
-      name     = "scale-out"
+      name     = "off-hours"
       schedule = "cron(0 0 * * ? *)"
       timezone = "Asia/Dubai"
       min_cap  = 2
