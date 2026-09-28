@@ -200,3 +200,9 @@ variable "default_version" {
   type        = number
   default     = 1
 }
+
+variable "user_data" {
+  description = "Base64-encoded user data for instances launched from this template."
+  type        = string
+  default     = null
+}

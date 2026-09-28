@@ -89,6 +89,7 @@ resource "aws_launch_template" "lt" {
   image_id        = var.ami != null ? var.ami : data.aws_ssm_parameter.latest_ami[0].value
   instance_type   = var.instance_type
   key_name        = var.key_name
+  user_data       = var.user_data
 
   dynamic "instance_market_options" {
     for_each = var.spot_enabled ? [1] : [] # Add block only if spot instances are enabled
