@@ -1,0 +1,67 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    name: fmt / validate / tflint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.4
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive -diff modules
+
+      - name: terraform validate (every module)
+        run: |
+          set -e
+          for m in $(find modules -name main.tf -printf '%h\n' | sort -u); do
+            echo "== $m"
+            terraform -chdir="$m" init -backend=false -input=false >/dev/null
+            terraform -chdir="$m" validate
+          done
+
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: tflint
+        run: |
+          set -e
+          tflint --init
+          for m in $(find modules -name main.tf -printf '%h\n' | sort -u); do
+            echo "== $m"
+            tflint --chdir="$m" --config="$GITHUB_WORKSPACE/.tflint.hcl"
+          done
+
+  terragrunt:
+    name: terragrunt hcl fmt / validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.4
+
+      - uses: gruntwork-io/terragrunt-action@v3
+        with:
+          tg_version: 1.1.6
+          tg_dir: live
+          tg_command: hcl fmt --check
+
+      - uses: gruntwork-io/terragrunt-action@v3
+        with:
+          tg_version: 1.1.6
+          tg_dir: live
+          tg_command: hcl validate
