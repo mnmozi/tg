@@ -109,7 +109,7 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = data.aws_acm_certificate.amazon_issued[0].arn
+    acm_certificate_arn      = coalesce(var.viewer_certificate.acm_certificate_arn, try(data.aws_acm_certificate.amazon_issued[0].arn, null))
     ssl_support_method       = var.viewer_certificate.ssl_support_method
     minimum_protocol_version = var.viewer_certificate.minimum_protocol_version
   }

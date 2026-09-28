@@ -27,7 +27,9 @@ resource "aws_ecs_service" "service" {
   name    = local.service_identifier
   cluster = var.cluster_name
 
-  task_definition = "${data.aws_ecs_task_definition.first_task_definition.family}:${max("${data.aws_ecs_task_definition.first_task_definition.revision}", "${data.aws_ecs_task_definition.recent_task_definition.revision}")}"
+  # Pin to the newest ACTIVE revision of the family so deployments made outside
+  # Terraform (CI pushing a new task definition) are never rolled back by a plan.
+  task_definition = "${data.aws_ecs_task_definition.first_task_definition.family}:${max(data.aws_ecs_task_definition.first_task_definition.revision, data.aws_ecs_task_definition.recent_task_definition.revision)}"
 
   desired_count                     = var.desired_count
   health_check_grace_period_seconds = var.health_check_grace_period_seconds

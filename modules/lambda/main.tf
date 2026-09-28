@@ -2,9 +2,9 @@ locals {
   region      = var.region
   environment = var.environment
 
-  function_identifier    = (var.function_name == null || var.function_name == "") ? "${var.environment}-${var.required_tags.project}-${var.required_tags.component}" : var.function_name
-  iam_role_identifier    = (var.iam_role_name == null || var.iam_role_name == "") ? "${var.environment}-${var.required_tags.project}-${var.required_tags.component}-lambda" : var.iam_role_name
-  iam_policy_identifier  = (var.iam_policy_name == null || var.iam_policy_name == "") ? "${var.environment}-${var.required_tags.project}-${var.required_tags.component}-lambda" : var.iam_policy_name
+  function_identifier   = (var.function_name == null || var.function_name == "") ? "${var.environment}-${var.required_tags.project}-${var.required_tags.component}" : var.function_name
+  iam_role_identifier   = (var.iam_role_name == null || var.iam_role_name == "") ? "${var.environment}-${var.required_tags.project}-${var.required_tags.component}-lambda" : var.iam_role_name
+  iam_policy_identifier = (var.iam_policy_name == null || var.iam_policy_name == "") ? "${var.environment}-${var.required_tags.project}-${var.required_tags.component}-lambda" : var.iam_policy_name
 
   tags = merge(
     var.required_tags,
@@ -70,7 +70,7 @@ resource "aws_iam_policy" "lambda_policy" {
 }
 
 module "iam_role" {
-  source            = "github.com/mnmozi/tg//modules/ami-role"
+  source            = "../ami-role"
   name              = local.iam_role_identifier
   is_instance       = false
   principal_service = ["lambda.amazonaws.com"]
@@ -156,10 +156,10 @@ resource "aws_cloudwatch_event_rule" "this" {
 resource "aws_cloudwatch_event_target" "this" {
   for_each = var.eventbridge_rules
 
-  rule      = aws_cloudwatch_event_rule.this[each.key].name
-  target_id = "${local.function_identifier}-${each.key}"
-  arn       = aws_lambda_function.this.arn
-  input     = each.value.input
+  rule       = aws_cloudwatch_event_rule.this[each.key].name
+  target_id  = "${local.function_identifier}-${each.key}"
+  arn        = aws_lambda_function.this.arn
+  input      = each.value.input
   input_path = each.value.input_path
 }
 

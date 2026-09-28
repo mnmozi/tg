@@ -110,12 +110,6 @@ variable "create_public_db_subnet_group" {
   default     = false
 }
 
-variable "create_private_elasticache_subnet_group" {
-  description = "Control if to create a private subnet group for elasticache or no"
-  type        = bool
-  default     = false
-}
-
 variable "enable_nat_gateway" {
   description = "Should be true if you want to provision NAT Gateways for each of your private networks	"
   type        = bool

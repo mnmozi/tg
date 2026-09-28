@@ -189,8 +189,8 @@ variable "block_device_mappings" {
   default = []
 }
 
-variable "iam" {
-  description = "Custom AMI ID (if provided)"
+variable "ami" {
+  description = "Explicit AMI ID. When null the latest AMI for `distro`/`arch` is resolved from SSM."
   type        = string
   default     = null
 }

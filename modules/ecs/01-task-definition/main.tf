@@ -28,7 +28,7 @@ locals {
         hostPort      = tonumber(pm.hostPort)
         protocol      = tostring(lookup(pm, "protocol", "tcp"))
       }
-    ] : (
+      ] : (
       contains(keys(var.containers_port), name) && contains(keys(var.hosts_port), name) ? [
         {
           containerPort = tonumber(var.containers_port[name])
@@ -117,15 +117,13 @@ resource "aws_iam_policy" "task_role_policy" {
           "Resource" : "*"
         },
         {
+          # Required by ECS Exec (SSM session channel); nothing else is needed on the task role.
           "Effect" : "Allow",
           "Action" : [
-            "ssm:DescribeInstanceInformation",
-            "ssm:SendCommand",
-            "ssm:StartSession",
-            "ssm:DescribeSessions",
-            "ssm:GetConnectionStatus",
-            "ssmmessages:*",
-            "ec2messages:*"
+            "ssmmessages:CreateControlChannel",
+            "ssmmessages:CreateDataChannel",
+            "ssmmessages:OpenControlChannel",
+            "ssmmessages:OpenDataChannel"
           ],
           "Resource" : "*"
         },
@@ -144,7 +142,7 @@ resource "aws_iam_policy" "task_role_policy" {
 }
 
 module "iam_execution_role" {
-  source            = "github.com/mnmozi/tg//modules/ami-role"
+  source            = "../../ami-role"
   name              = local.iam_execution_role_identifier
   is_instance       = false
   principal_service = ["ecs-tasks.amazonaws.com"]
@@ -159,7 +157,7 @@ module "iam_execution_role" {
 
 
 module "iam_task_role" {
-  source            = "github.com/mnmozi/tg//modules/ami-role"
+  source            = "../../ami-role"
   name              = local.iam_task_role_identifier
   is_instance       = false
   principal_service = ["ecs-tasks.amazonaws.com"]
@@ -209,7 +207,7 @@ resource "aws_ecs_task_definition" "service_task_definition" {
           { logDriver = lookup(var.log_drivers, container_name, "awslogs") },
           contains(keys(var.log_options), container_name) ? {
             options = var.log_options[container_name]
-          } : lookup(
+            } : lookup(
             {
               awslogs = {
                 options = {
@@ -250,7 +248,7 @@ resource "aws_ecs_task_definition" "service_task_definition" {
           { logDriver = config.log_driver },
           length(config.log_options) > 0 ? {
             options = config.log_options
-          } : {
+            } : {
             options = {
               "awslogs-group"         = "/ecs/${name}"
               "awslogs-region"        = local.region

@@ -73,7 +73,7 @@ resource "aws_iam_policy" "role_policy" {
 
 # Module with conditional inclusion of custom_policy
 module "role" {
-  source            = "github.com/mnmozi/tg//modules/ami-role"
+  source            = "../ami-role"
   name              = local.identifier
   is_instance       = true
   principal_service = ["ec2.amazonaws.com"]
@@ -86,8 +86,8 @@ module "role" {
       custom_policy = aws_iam_policy.role_policy[0].arn
     } : {}
   )
-  region= var.region
-  tags = local.tags
+  region = var.region
+  tags   = local.tags
 }
 
 resource "aws_instance" "instance" {

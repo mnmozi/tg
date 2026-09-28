@@ -13,7 +13,8 @@ locals {
 }
 
 module "s3_bucket" {
-  source = "terraform-aws-modules/s3-bucket/aws"
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "5.16.1"
 
   bucket = local.identifier
 

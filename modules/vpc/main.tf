@@ -23,8 +23,9 @@ locals {
   database_subnet_count    = var.create_database_subnet ? var.az_count * var.subnets_per_az.database : 0
   elasticache_subnet_count = var.create_elasticache_subnet ? var.az_count * var.subnets_per_az.elasticache : 0
 
-  public_subnets      = slice(local.final_subnets, 0, local.private_subnet_count)
-  private_subnets     = slice(local.final_subnets, local.private_subnet_count, local.private_subnet_count + local.public_subnet_count)
+  # Layout of the generated CIDR list: public | private | database | elasticache
+  public_subnets      = slice(local.final_subnets, 0, local.public_subnet_count)
+  private_subnets     = slice(local.final_subnets, local.public_subnet_count, local.public_subnet_count + local.private_subnet_count)
   database_subnets    = var.create_database_subnet ? slice(local.final_subnets, local.private_subnet_count + local.public_subnet_count, local.private_subnet_count + local.public_subnet_count + local.database_subnet_count) : []
   elasticache_subnets = var.create_elasticache_subnet ? slice(local.final_subnets, local.private_subnet_count + local.public_subnet_count + local.database_subnet_count, local.private_subnet_count + local.public_subnet_count + local.database_subnet_count + local.elasticache_subnet_count) : []
 
@@ -42,7 +43,7 @@ locals {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "5.8.1"
+  version = "6.7.3"
 
   name = local.vpc_identifier
   cidr = local.cidr
@@ -109,9 +110,3 @@ resource "aws_route53_zone" "private" {
     vpc_id = module.vpc.vpc_id
   }
 }
-# resource "aws_elasticache_subnet_group" "elasticache_subnet_group" {
-#   count      = var.create_elasticache_subnet ? 1 : 0
-#   name       = "${local.vpc_identifier}-elasticache-subnets"
-#   subnet_ids = module.vpc.elasticache_subnets
-#   tags       = merge(local.tags)
-# }

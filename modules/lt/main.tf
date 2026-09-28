@@ -64,7 +64,7 @@ resource "aws_iam_policy" "role_policy" {
 }
 
 module "role" {
-  source            = "github.com/mnmozi/tg//modules/ami-role"
+  source            = "../ami-role"
   name              = local.iam_role_identifier
   is_instance       = true
   principal_service = ["ec2.amazonaws.com"]
@@ -86,7 +86,7 @@ module "role" {
 resource "aws_launch_template" "lt" {
   default_version = var.default_version
   name            = local.lt_identifier
-  image_id        = var.iam != null ? var.iam : data.aws_ssm_parameter.latest_ami[0].value
+  image_id        = var.ami != null ? var.ami : data.aws_ssm_parameter.latest_ami[0].value
   instance_type   = var.instance_type
   key_name        = var.key_name
 
@@ -115,21 +115,6 @@ resource "aws_launch_template" "lt" {
   iam_instance_profile {
     name = module.role.aws_iam_instance_profile
   }
-  dynamic "block_device_mappings" {
-    for_each = var.block_device_mappings
-    content {
-      device_name = block_device_mappings.value.device_name
-      ebs {
-        delete_on_termination = block_device_mappings.value.ebs.delete_on_termination
-        encrypted             = block_device_mappings.value.ebs.encrypted
-        iops                  = block_device_mappings.value.ebs.iops
-        throughput            = block_device_mappings.value.ebs.throughput
-        volume_size           = block_device_mappings.value.ebs.volume_size
-        volume_type           = block_device_mappings.value.ebs.volume_type
-      }
-    }
-  }
-
   dynamic "block_device_mappings" {
     for_each = var.block_device_mappings
     content {

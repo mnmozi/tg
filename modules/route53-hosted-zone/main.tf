@@ -20,5 +20,5 @@ resource "aws_route53_zone" "this" {
     }
   }
 
-  tags = var.tags
+  tags = local.tags
 }

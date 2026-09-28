@@ -76,5 +76,5 @@ resource "aws_security_group" "sg" {
     }
   }
 
-  tags = merge(var.tags, { Name = local.identifier })
+  tags = merge(local.tags, { Name = local.identifier })
 }

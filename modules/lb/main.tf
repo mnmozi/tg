@@ -22,6 +22,7 @@ locals {
   ])
   first_certificates = {
     for listener_port, domains in var.certificates : listener_port => domains[0]
+    if !contains(keys(var.listener_certificate_arns), listener_port)
   }
 }
 
@@ -62,7 +63,11 @@ resource "aws_lb_listener" "listeners" {
   load_balancer_arn = aws_lb.lb.arn
   port              = each.value.port
   protocol          = each.value.protocol
-  certificate_arn   = each.value.protocol == "HTTPS" ? data.aws_acm_certificate.default_certificates["${each.value.port}"].arn : null
+  certificate_arn = each.value.protocol == "HTTPS" ? lookup(
+    var.listener_certificate_arns,
+    tostring(each.value.port),
+    try(data.aws_acm_certificate.default_certificates[tostring(each.value.port)].arn, null)
+  ) : null
 
   default_action {
     type = "fixed-response"

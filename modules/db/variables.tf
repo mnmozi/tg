@@ -10,7 +10,7 @@ variable "environment" {
 
 variable "snapshot_identifier" {
   type        = string
-  description = "snap-shot identifier"
+  description = "Instance identifier whose most recent manual snapshot is restored when from_backup is true."
   default     = ""
 }
 
@@ -48,6 +48,7 @@ variable "instance_access_type" {
 
 variable "secret_name" {
   type        = string
+  default     = null
   description = "The name of the secret in AWS Secrets Manager containing the database credentials."
 }
 variable "password" {
@@ -58,7 +59,20 @@ variable "password" {
 
 variable "password_key" {
   type        = string
+  default     = null
   description = "The key for the password in the AWS Secrets Manager secret."
+}
+
+variable "password_version" {
+  type        = number
+  default     = 1
+  description = "Increment after rotating the password in Secrets Manager; the master password is write-only and only re-sent when this changes."
+}
+
+variable "manage_master_user_password" {
+  type        = bool
+  default     = false
+  description = "Let RDS create and rotate the master password in Secrets Manager. When true, secret_name/password_key/password are ignored."
 }
 
 variable "engine" {
@@ -96,6 +110,7 @@ variable "create_db_parameter_group" {
 
 variable "parameter_group_name" {
   type        = string
+  default     = null
   description = "The name of the DB parameter group to associate with the RDS instance."
 }
 
@@ -183,7 +198,31 @@ variable "db_subnet_group_name" {
 variable "from_backup" {
   type        = bool
   default     = false
-  description = "Whether to copy tags to snapshots."
+  description = "Restore from the most recent manual snapshot of `snapshot_identifier` (defaults to this instance's identifier)."
+}
+
+variable "final_snapshot_identifier_prefix" {
+  type        = string
+  default     = "final"
+  description = "Prefix of the final snapshot name (a random suffix is appended by the upstream module)."
+}
+
+variable "backup_retention_period" {
+  type        = number
+  default     = 7
+  description = "Days to retain automated backups."
+}
+
+variable "delete_automated_backups" {
+  type        = bool
+  default     = true
+  description = "Remove automated backups immediately after the instance is deleted."
+}
+
+variable "deletion_protection" {
+  type        = bool
+  default     = false
+  description = "Enable deletion protection on the instance."
 }
 
 variable "copy_tags_to_snapshot" {

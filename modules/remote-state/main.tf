@@ -15,19 +15,18 @@ locals {
 }
 
 module "remote_state" {
-  source                      = "nozaq/remote-state-s3-backend/aws"
+  source  = "nozaq/remote-state-s3-backend/aws"
+  version = "1.6.1"
+
   enable_replication          = var.enable_replication
   dynamodb_table_name         = var.dynamodb_table_name
   override_s3_bucket_name     = true
   s3_bucket_name              = var.s3_bucket_name
   terraform_iam_policy_create = false
   tags                        = local.tags
+
   providers = {
     aws         = aws
     aws.replica = aws.replica
   }
-}
-
-output "remote_state_module" {
-  value = module.remote_state
 }

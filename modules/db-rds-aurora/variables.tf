@@ -5,203 +5,238 @@ variable "region" {
 
 variable "environment" {
   type        = string
-  description = "The AWS region to deploy the resources in."
-}
-
-variable "snapshot_identifier" {
-  type        = string
-  description = "snap-shot identifier"
-  default     = ""
+  description = "Environment name (dev, uat, prod)."
 }
 
 variable "owner" {
   type    = string
   default = null
 }
-variable "db_name" {
-  type = string
 
-  default = null
-}
-
-# Naming variables
 variable "required_tags" {
   type = object({
     project   = string
     component = string
   })
-  description = "Required tags for the RDS instance, including application and component."
+  description = "Required tags for the cluster: project and component."
 }
 
 variable "tags" {
   type        = map(string)
   default     = {}
-  description = "Additional tags to include for the RDS instance."
+  description = "Additional tags to include for the cluster."
 }
 
-# RDS settings
-variable "publicly_accessible" {
-  type        = bool
-  default     = false
-  description = "The type and scope of the instance (e.g., public, private)."
-}
-
-variable "secret_name" {
+variable "db_name" {
   type        = string
-  description = "The name of the secret in AWS Secrets Manager containing the database credentials."
-}
-variable "password" {
-  type        = string
-  description = "THIS IS NOT RECOMENDED, PLEASE CONSEDER CREATING SECRET AND PASS IT IN secret_name and  password_key."
-  default     = ""
-}
-variable "db_cluster_parameter_group_family" {
-  type    = string
-  default = ""
-}
-variable "db_parameter_group_family" {
-  type    = string
-  default = ""
+  default     = null
+  description = "Cluster identifier. Defaults to <environment>-<instance_class>-<project>-<component>."
 }
 
-variable "password_key" {
-  type        = string
-  description = "The key for the password in the AWS Secrets Manager secret."
-}
-
+# ---------------------------------------------------------------------------
+# Engine / instances
+# ---------------------------------------------------------------------------
 variable "engine" {
   type        = string
-  default     = "postgres"
-  description = "The database engine to use (e.g., mysql, postgres)."
+  default     = "aurora-postgresql"
+  description = "Aurora engine (aurora-postgresql or aurora-mysql)."
 }
 
 variable "engine_version" {
   type        = string
-  description = "The version of the database engine to use."
+  description = "Engine version."
 }
 
 variable "instance_class" {
   type        = string
-  description = "The instance class for the RDS database (e.g., db.t3.micro)."
+  description = "Instance class applied to every cluster instance (e.g. db.t4g.medium)."
 }
 
-variable "create_db_parameter_group" {
-  type        = bool
-  default     = false
-  description = "Whether to create a new DB parameter group."
-}
-
-variable "parameter_group_name" {
-  type        = string
-  description = "The name of the DB parameter group to associate with the RDS instance."
-}
-
-variable "allocated_storage" {
-  type        = number
-  default     = null
-  description = "The allocated storage size in GB for the RDS instance."
-}
-
-variable "max_allocated_storage" {
-  type        = number
-  default     = 0
-  description = "The allocated storage size in GB for the RDS instance."
-}
-
-variable "username" {
-  type        = string
-  default     = "master_user"
-  description = "The master username for the RDS database."
-}
 variable "instances" {
   type        = map(any)
-  description = "The master username for the RDS database."
+  description = "Map of cluster instances. Values may override any per-instance attribute (instance_class, publicly_accessible, promotion_tier, ...)."
 }
 
-variable "storage_type" {
-  type        = string
-  default     = "gp3"
-  description = "The type of storage to use for the RDS database (e.g., gp2, io1)."
-}
-
-variable "port" {
-  type        = number
-  description = "The port on which the RDS instance will accept connections."
-}
-
-variable "multi_az" {
+variable "publicly_accessible" {
   type        = bool
   default     = false
-  description = "Whether to deploy the RDS instance in multiple availability zones."
-}
-
-variable "storage_encrypted" {
-  type        = bool
-  default     = true
-  description = "Whether to enable storage encryption for the RDS instance."
-}
-
-variable "apply_immediately" {
-  type        = bool
-  default     = true
-  description = "Whether to apply changes immediately or during the next maintenance window."
-}
-
-variable "skip_final_snapshot" {
-  type        = bool
-  default     = false
-  description = "Whether to skip taking a final snapshot before deleting the RDS instance."
+  description = "Default publicly_accessible for every instance (override per instance in `instances`)."
 }
 
 variable "performance_insights_enabled" {
   type        = bool
   default     = false
-  description = "Whether to enable performance insights for the RDS instance."
+  description = "Default Performance Insights setting for every instance (override per instance in `instances`)."
 }
 
-variable "iam_database_authentication_enabled" {
+variable "cluster_performance_insights_retention_period" {
+  type        = number
+  default     = null
+  description = "Cluster-level Performance Insights retention in days (7, 731, or a multiple of 31)."
+}
+
+variable "port" {
+  type        = number
+  description = "Port the cluster listens on."
+}
+
+# ---------------------------------------------------------------------------
+# Parameter groups
+# ---------------------------------------------------------------------------
+variable "create_db_parameter_group" {
   type        = bool
   default     = false
-  description = "Whether to enable IAM authentication for the RDS instance."
+  description = "Create a cluster parameter group and a DB parameter group from the families below."
 }
 
-variable "vpc_security_group_ids" {
-  type        = list(string)
-  description = "A list of security group IDs to associate with the RDS instance."
-}
-
-variable "db_subnet_group_name" {
+variable "db_cluster_parameter_group_family" {
   type        = string
-  description = "The name of the DB subnet group to associate with the RDS instance."
+  default     = ""
+  description = "Cluster parameter group family (e.g. aurora-postgresql16)."
+}
+
+variable "db_parameter_group_family" {
+  type        = string
+  default     = ""
+  description = "DB (instance) parameter group family (e.g. aurora-postgresql16)."
+}
+
+variable "parameter_group_name" {
+  type        = string
+  default     = null
+  description = "Existing cluster parameter group to use when create_db_parameter_group is false."
+}
+
+# ---------------------------------------------------------------------------
+# Credentials
+# ---------------------------------------------------------------------------
+variable "username" {
+  type        = string
+  default     = "master_user"
+  description = "Master username."
+}
+
+variable "manage_master_user_password" {
+  type        = bool
+  default     = false
+  description = "Let RDS create and rotate the master password in Secrets Manager. When true, secret_name/password_key/password are ignored."
+}
+
+variable "secret_name" {
+  type        = string
+  default     = null
+  description = "Secrets Manager secret holding the master password."
+}
+
+variable "password_key" {
+  type        = string
+  default     = null
+  description = "JSON key inside `secret_name` that holds the password."
+}
+
+variable "password_version" {
+  type        = number
+  default     = 1
+  description = "Increment after rotating the password in Secrets Manager; the master password is write-only and only re-sent when this changes."
+}
+
+variable "password" {
+  type        = string
+  default     = ""
+  sensitive   = true
+  description = "Plain-text fallback. Not recommended: prefer secret_name + password_key or manage_master_user_password."
+}
+
+# ---------------------------------------------------------------------------
+# Storage / backups
+# ---------------------------------------------------------------------------
+variable "allocated_storage" {
+  type        = number
+  default     = null
+  description = "Allocated storage in GB (only for provisioned io-optimized/limitless setups)."
+}
+
+variable "storage_type" {
+  type        = string
+  default     = null
+  description = "Storage type (aurora, aurora-iopt1)."
+}
+
+variable "storage_encrypted" {
+  type        = bool
+  default     = true
+  description = "Encrypt storage at rest."
+}
+
+variable "apply_immediately" {
+  type        = bool
+  default     = true
+  description = "Apply changes immediately instead of during the maintenance window."
 }
 
 variable "from_backup" {
   type        = bool
   default     = false
-  description = "Whether to copy tags to snapshots."
+  description = "Restore from the most recent manual cluster snapshot of `snapshot_identifier` (defaults to this cluster's identifier)."
 }
 
-variable "copy_tags_to_snapshot" {
+variable "snapshot_identifier" {
+  type        = string
+  default     = ""
+  description = "Cluster identifier whose most recent manual snapshot is restored when from_backup is true."
+}
+
+variable "skip_final_snapshot" {
   type        = bool
-  default     = true
-  description = "Whether to copy tags to snapshots."
+  default     = false
+  description = "Skip the final snapshot on destroy."
+}
+
+variable "final_snapshot_identifier" {
+  type        = string
+  default     = null
+  description = "Name of the final snapshot. Defaults to <cluster identifier>-final."
 }
 
 variable "delete_automated_backups" {
   type        = bool
   default     = true
-  description = "Whether to delete automated backups when cluster is deleted."
+  description = "Remove automated backups immediately after the cluster is deleted."
 }
 
 variable "backup_retention_period" {
   type        = number
   default     = 7
-  description = "period for backup retention."
+  description = "Days to retain automated backups."
 }
 
-variable "cluster_performance_insights_retention_period" {
-  type        = number
-  default     = 0
-  description = "period for cluster performance retention."
+variable "copy_tags_to_snapshot" {
+  type        = bool
+  default     = true
+  description = "Copy cluster tags to snapshots."
 }
 
+variable "deletion_protection" {
+  type        = bool
+  default     = false
+  description = "Enable deletion protection on the cluster."
+}
+
+variable "iam_database_authentication_enabled" {
+  type        = bool
+  default     = false
+  description = "Enable IAM database authentication."
+}
+
+# ---------------------------------------------------------------------------
+# Networking
+# ---------------------------------------------------------------------------
+variable "vpc_security_group_ids" {
+  type        = list(string)
+  description = "Security groups attached to the cluster."
+}
+
+variable "db_subnet_group_name" {
+  type        = string
+  description = "Existing DB subnet group name."
+}

@@ -40,3 +40,9 @@ variable "s3_bucket_name" {
   description = "name of the s3 bucket"
   type        = string
 }
+
+variable "replica_region" {
+  description = "Region for the replica bucket when enable_replication is true. Defaults to `region`."
+  type        = string
+  default     = null
+}

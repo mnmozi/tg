@@ -86,7 +86,14 @@ variable "listeners" {
   }))
 }
 variable "certificates" {
-  description = "Map of listener names to lists of certificates."
+  description = "Map of listener port (as string) to a list of ACM certificate domain names. The first entry becomes the listener's default certificate, the rest are attached as additional SNI certificates. Ignored for a port present in `listener_certificate_arns`."
   type        = map(list(string))
+  default     = {}
+}
+
+variable "listener_certificate_arns" {
+  description = "Map of listener port (as string) to an explicit ACM certificate ARN to use as that HTTPS listener's default certificate."
+  type        = map(string)
+  default     = {}
 }
 

@@ -25,7 +25,7 @@ resource "aws_iam_policy" "this" {
 }
 
 module "role" {
-  source            = "github.com/mnmozi/tg//modules/ami-role"
+  source            = "../ami-role"
   name              = local.role_name
   is_instance       = var.is_instance
   principal_service = var.principal_service
